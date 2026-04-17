@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: trading-persistence-api
-        image: trading-persistence-api:latest
+        image: hsaii/trading-project-persistence:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -31,7 +31,7 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: trading-db-secrets
+              name: trading-secrets
               key: postgres-password
         resources:
           limits:
