@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TradingProject.Persistence.Api/TradingProject.Persistence.Api.csproj" />
+    <Project Path="src/TradingProject.Persistence.Application/TradingProject.Persistence.Application.csproj" />
+    <Project Path="src/TradingProject.Persistence.Domain/TradingProject.Persistence.Domain.csproj" />
+    <Project Path="src/TradingProject.Persistence.Infrastructure/TradingProject.Persistence.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TradingProject.Persistence.Api.Tests/TradingProject.Persistence.Api.Tests.csproj" />
+    <Project Path="tests/TradingProject.Persistence.IntegrationTests/TradingProject.Persistence.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

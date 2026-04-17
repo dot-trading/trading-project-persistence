@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TradingProject.Persistence.Application\TradingProject.Persistence.Application.csproj" />
+    <ProjectReference Include="..\TradingProject.Persistence.Infrastructure\TradingProject.Persistence.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

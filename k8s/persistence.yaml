@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trading-persistence-api
+  namespace: trading-ai
+  labels:
+    app: trading-persistence-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading-persistence-api
+  template:
+    metadata:
+      labels:
+        app: trading-persistence-api
+    spec:
+      containers:
+      - name: trading-persistence-api
+        image: trading-persistence-api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: POSTGRES_HOST
+          value: "postgres"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: trading-db-secrets
+              key: postgres-password
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trading-persistence-api
+  namespace: trading-ai
+  labels:
+    app: trading-persistence-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: trading-persistence-api
