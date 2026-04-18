@@ -17,10 +17,19 @@ spec:
     spec:
       containers:
       - name: trading-persistence-api
-        image: hsaii/trading-project-persistence:latest
+        image: hsaii/trading-persistence:latest
         imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /api/TradingData/stats
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
         ports:
         - containerPort: 8080
+        envFrom:
+          - configMapRef:
+              name: service-endpoints
         env:
         - name: ASPNETCORE_ENVIRONMENT
           value: "Production"

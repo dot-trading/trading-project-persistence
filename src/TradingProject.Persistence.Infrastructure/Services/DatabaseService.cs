@@ -191,9 +191,10 @@ public class DatabaseService(IOptions<TradingConnectionSettings> settings) : IDa
         using var conn = GetConnection();
         conn.Open();
         using var cmd = new NpgsqlCommand(
-            "INSERT INTO portfolio_snapshots (free_usdt, total_usdt, created_at) VALUES (@f, @t, NOW())", conn);
+            "INSERT INTO portfolio_snapshots (free_usdt, total_usdt, positions_count, created_at) VALUES (@f, @t, @c, NOW())", conn);
         cmd.Parameters.AddWithValue("f", portfolio.FreeUsdt);
         cmd.Parameters.AddWithValue("t", portfolio.TotalUsdt);
+        cmd.Parameters.AddWithValue("c", portfolio.OpenPositions?.Count ?? 0);
         cmd.ExecuteNonQuery();
     }
 }
