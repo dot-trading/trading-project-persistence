@@ -35,4 +35,42 @@ public class TradingDataController(IMediator mediator) : ControllerBase
     [HttpGet("trades/last")]
     public async Task<IActionResult> GetLastTrades(CancellationToken ct, [FromQuery] int limit = 5)
         => Ok(await mediator.SendQueryAsync(new GetLastTradesQuery(limit), ct));
+
+    [HttpPost("trades/open")]
+    public async Task<IActionResult> LogTradeOpen([FromBody] OpenPosition trade, CancellationToken ct)
+    {
+        await mediator.SendCommandAsync(new LogTradeOpenCommand(trade), ct);
+        return Ok();
+    }
+
+    [HttpPost("trades/close")]
+    public async Task<IActionResult> LogTradeClose([FromBody] LogTradeCloseRequest req, CancellationToken ct)
+    {
+        await mediator.SendCommandAsync(new LogTradeCloseCommand(req.TradeId, req.ClosePrice, req.PnlUsdt, req.PnlPct, req.Reason), ct);
+        return Ok();
+    }
+
+    [HttpPost("trades/takeprofit")]
+    public async Task<IActionResult> UpdateTakeProfit([FromBody] UpdateTakeProfitRequest req, CancellationToken ct)
+    {
+        await mediator.SendCommandAsync(new UpdateTakeProfitCommand(req.TradeId, req.TakeProfit), ct);
+        return Ok();
+    }
+
+    [HttpPost("opportunities")]
+    public async Task<IActionResult> LogOpportunity([FromBody] OpportunityData opportunity, CancellationToken ct)
+    {
+        await mediator.SendCommandAsync(new LogOpportunityCommand(opportunity), ct);
+        return Ok();
+    }
+
+    [HttpPost("portfolio/snapshot")]
+    public async Task<IActionResult> LogPortfolioSnapshot([FromBody] PortfolioData portfolio, CancellationToken ct)
+    {
+        await mediator.SendCommandAsync(new LogPortfolioSnapshotCommand(portfolio), ct);
+        return Ok();
+    }
 }
+
+public record LogTradeCloseRequest(int TradeId, double ClosePrice, double PnlUsdt, double PnlPct, string Reason);
+public record UpdateTakeProfitRequest(int TradeId, double TakeProfit);

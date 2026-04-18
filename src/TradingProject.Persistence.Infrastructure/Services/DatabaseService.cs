@@ -130,4 +130,70 @@ public class DatabaseService(IOptions<TradingConnectionSettings> settings) : IDa
                 r.IsDBNull(8) ? DateTime.MinValue : r.GetDateTime(8)));
         return list;
     }
+    public void LogTradeOpen(OpenPosition trade)
+    {
+        using var conn = GetConnection();
+        conn.Open();
+        using var cmd = new NpgsqlCommand(
+            "INSERT INTO trades (symbol, side, status, price, quantity, usdt_value, stop_loss, take_profit, ai_score, created_at) " +
+            "VALUES (@s, @side, 'open', @p, @q, @v, @sl, @tp, @ai, @dt)", conn);
+        cmd.Parameters.AddWithValue("s", trade.Symbol);
+        cmd.Parameters.AddWithValue("side", trade.Side);
+        cmd.Parameters.AddWithValue("p", trade.Entry);
+        cmd.Parameters.AddWithValue("q", trade.Quantity);
+        cmd.Parameters.AddWithValue("v", trade.UsdtValue);
+        cmd.Parameters.AddWithValue("sl", trade.StopLoss ?? (object)DBNull.Value);
+        cmd.Parameters.AddWithValue("tp", trade.TakeProfit ?? (object)DBNull.Value);
+        cmd.Parameters.AddWithValue("ai", trade.AiScore ?? (object)DBNull.Value);
+        cmd.Parameters.AddWithValue("dt", trade.CreatedAt);
+        cmd.ExecuteNonQuery();
+    }
+
+    public void LogTradeClose(int tradeId, double closePrice, double pnlUsdt, double pnlPct, string reason)
+    {
+        using var conn = GetConnection();
+        conn.Open();
+        using var cmd = new NpgsqlCommand(
+            "UPDATE trades SET status='closed', close_price=@cp, pnl_usdt=@pnl, pnl_pct=@pct, close_at=NOW(), ai_reason=@r WHERE id=@id", conn);
+        cmd.Parameters.AddWithValue("cp", closePrice);
+        cmd.Parameters.AddWithValue("pnl", pnlUsdt);
+        cmd.Parameters.AddWithValue("pct", pnlPct);
+        cmd.Parameters.AddWithValue("r", reason);
+        cmd.Parameters.AddWithValue("id", tradeId);
+        cmd.ExecuteNonQuery();
+    }
+
+    public void UpdateTakeProfit(int tradeId, double takeProfit)
+    {
+        using var conn = GetConnection();
+        conn.Open();
+        using var cmd = new NpgsqlCommand("UPDATE trades SET take_profit=@tp WHERE id=@id", conn);
+        cmd.Parameters.AddWithValue("tp", takeProfit);
+        cmd.Parameters.AddWithValue("id", tradeId);
+        cmd.ExecuteNonQuery();
+    }
+
+    public void LogOpportunity(OpportunityData opportunity)
+    {
+        using var conn = GetConnection();
+        conn.Open();
+        using var cmd = new NpgsqlCommand(
+            "INSERT INTO opportunities (symbol, score, reason, price, created_at) VALUES (@s, @score, @r, @p, NOW())", conn);
+        cmd.Parameters.AddWithValue("s", opportunity.Symbol);
+        cmd.Parameters.AddWithValue("score", opportunity.Score);
+        cmd.Parameters.AddWithValue("r", opportunity.Reason);
+        cmd.Parameters.AddWithValue("p", opportunity.Price);
+        cmd.ExecuteNonQuery();
+    }
+
+    public void LogPortfolioSnapshot(PortfolioData portfolio)
+    {
+        using var conn = GetConnection();
+        conn.Open();
+        using var cmd = new NpgsqlCommand(
+            "INSERT INTO portfolio_snapshots (free_usdt, total_usdt, created_at) VALUES (@f, @t, NOW())", conn);
+        cmd.Parameters.AddWithValue("f", portfolio.FreeUsdt);
+        cmd.Parameters.AddWithValue("t", portfolio.TotalUsdt);
+        cmd.ExecuteNonQuery();
+    }
 }

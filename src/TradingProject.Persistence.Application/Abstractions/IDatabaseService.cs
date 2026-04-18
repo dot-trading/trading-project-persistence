@@ -9,7 +9,16 @@ public interface IDatabaseService
     PnlSummary GetPnlSummary();
     List<OpenPosition> GetOpenPositions();
     List<ClosedTrade> GetLastTrades(int limit = 5);
+
+    void LogTradeOpen(OpenPosition trade);
+    void LogTradeClose(int tradeId, double closePrice, double pnlUsdt, double pnlPct, string reason);
+    void UpdateTakeProfit(int tradeId, double takeProfit);
+    void LogOpportunity(OpportunityData opportunity);
+    void LogPortfolioSnapshot(PortfolioData portfolio);
 }
+
+public record OpportunityData(string Symbol, int Score, string Reason, double Price);
+public record PortfolioData(double FreeUsdt, double TotalUsdt, List<OpenPosition> OpenPositions);
 
 public record Stats(
     double PnlDay, double PnlWeek, double PnlMonth, double PnlTotal,
