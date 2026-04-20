@@ -23,6 +23,7 @@ public record Stats(
 
 
 public record OpenPosition(
+    int Id,
     string Symbol, string Side,
     double Entry, double Quantity, double UsdtValue,
     double? StopLoss, double? TakeProfit, int? AiScore,

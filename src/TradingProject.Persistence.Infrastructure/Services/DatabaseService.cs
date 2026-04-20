@@ -128,13 +128,14 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
 
     public async Task<List<OpenPosition>> GetOpenPositions(CancellationToken ct = default)
     {
-        return await context.Trades
+        var trades = await context.Trades
             .Where(t => t.Status == "open")
             .OrderByDescending(t => t.CreatedAt)
-            .Select(t => new OpenPosition(
-                t.Symbol, t.Side, t.Price, t.Quantity, t.UsdtValue,
-                t.StopLoss, t.TakeProfit, t.AiScore, t.CreatedAt))
             .ToListAsync(ct);
+
+        return trades.Select(t => new OpenPosition(
+            t.Id, t.Symbol, t.Side, t.Price, t.Quantity, t.UsdtValue,
+            t.StopLoss, t.TakeProfit, t.AiScore, t.CreatedAt)).ToList();
     }
 
     public async Task<List<ClosedTrade>> GetLastTrades(int limit = 5, CancellationToken ct = default)
