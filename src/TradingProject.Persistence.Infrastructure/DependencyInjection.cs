@@ -23,7 +23,8 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IDatabaseService, DatabaseService>();
-
+        services.AddScoped<ITradingDbContext, TradingDbContext>();
+        
         return services;
     }
 }

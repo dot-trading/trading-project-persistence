@@ -1,5 +1,6 @@
 using Cortex.Mediator.Queries;
 using TradingProject.Persistence.Application.Abstractions;
+using TradingProject.Persistence.Application.Common.Models;
 
 namespace TradingProject.Persistence.Application.Queries;
 

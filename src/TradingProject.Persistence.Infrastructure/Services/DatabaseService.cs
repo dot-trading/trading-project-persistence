@@ -1,15 +1,51 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using TradingProject.Persistence.Application.Abstractions;
+using TradingProject.Persistence.Application.Common.Enums;
+using TradingProject.Persistence.Application.Common.Models;
 using TradingProject.Persistence.Infrastructure.Settings;
 
 namespace TradingProject.Persistence.Infrastructure.Services;
 
-public class DatabaseService(IOptions<TradingConnectionSettings> settings) : IDatabaseService
+public class DatabaseService(ITradingDbContext context) : IDatabaseService
 {
-    private NpgsqlConnection GetConnection() => new(
-        $"Host={settings.Value.Host};Port={settings.Value.Port};Database=trading;Username=trading;Password={settings.Value.Password}");
+    public async Task<PnlSummaryItem> GetPnlSummaryAsync(
+        PnlSummaryType pnlSummaryType,
+        CancellationToken cancellationToken = default)
+    {
+        var query = context.Trades.Where(e => e.Status == "closed");
 
+        switch (pnlSummaryType)
+        {
+            case PnlSummaryType.Today:
+                query = query.Where(e => e.CloseAt >= DateTime.Today);
+                break;
+            case PnlSummaryType.Yesterday:
+                query = query.Where(e => e.CloseAt >= DateTime.Today.AddDays(-1) && e.CloseAt < DateTime.Today);
+                break;
+            case PnlSummaryType.ThisWeek:
+                var daysToMonday = ((int)DateTime.Today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+                query = query.Where(e => e.CloseAt >= DateTime.Today.AddDays(-daysToMonday));
+                break;
+            case PnlSummaryType.ThisMonth:
+                query = query.Where(e => e.CloseAt >= new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1));
+                break;
+            case PnlSummaryType.ThisYear:
+                query = query.Where(e => e.CloseAt >= new DateTime(DateTime.Today.Year, 1, 1));
+                break;
+        }
+
+        var pnl = await query.SumAsync(e => e.PnlUsdt ?? 0, cancellationToken);
+        return new PnlSummaryItem(Convert.ToDecimal(pnl),  pnlSummaryType);
+    }
+    
+    public PnlSummary GetPnlSummary()
+    {
+        
+        return new PnlSummary(Query("day"), Query("week"), Query("month"), Query("all"));
+    }
+    
     public int GetOpenPositionsCount()
     {
         using var conn = GetConnection();
@@ -71,22 +107,6 @@ public class DatabaseService(IOptions<TradingConnectionSettings> settings) : IDa
 
         return new Stats(pnlDay, pnlWeek, pnlMonth, pnlTotal, cDay, cWeek, cMonth, cTotal, wins,
             cTotal > 0 ? wins * 100.0 / cTotal : 0);
-    }
-
-    public PnlSummary GetPnlSummary()
-    {
-        using var conn = GetConnection();
-        conn.Open();
-
-        double Query(string trunc)
-        {
-            using var cmd = new NpgsqlCommand(
-                "SELECT COALESCE(SUM(pnl_usdt),0) FROM trades WHERE status='closed'" +
-                (trunc != "all" ? $" AND close_at >= DATE_TRUNC('{trunc}',NOW())" : ""), conn);
-            return Convert.ToDouble(cmd.ExecuteScalar());
-        }
-
-        return new PnlSummary(Query("day"), Query("week"), Query("month"), Query("all"));
     }
 
     public List<OpenPosition> GetOpenPositions()

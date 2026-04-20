@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using TradingProject.Persistence.Application.Abstractions;
 using TradingProject.Persistence.Domain.Entities;
 
 namespace TradingProject.Persistence.Infrastructure.Persistence;
 
-public class TradingDbContext(DbContextOptions<TradingDbContext> options) : DbContext(options)
+public class TradingDbContext(DbContextOptions<TradingDbContext> options) : DbContext(options), ITradingDbContext
 {
     public DbSet<Trade> Trades => Set<Trade>();
     public DbSet<Opportunity> Opportunities => Set<Opportunity>();
