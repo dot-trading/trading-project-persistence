@@ -8,6 +8,6 @@ public class GetDailyPnlQuery : IQuery<double>;
 public class GetDailyPnlQueryHandler(IDatabaseService databaseService)
     : IQueryHandler<GetDailyPnlQuery, double>
 {
-    public Task<double> Handle(GetDailyPnlQuery query, CancellationToken cancellationToken)
-        => Task.FromResult(databaseService.GetDailyPnl());
+    public async Task<double> Handle(GetDailyPnlQuery query, CancellationToken cancellationToken)
+        => await databaseService.GetDailyPnl(cancellationToken);
 }

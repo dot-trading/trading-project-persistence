@@ -1,5 +1,6 @@
 using Cortex.Mediator.Commands;
 using TradingProject.Persistence.Application.Abstractions;
+using TradingProject.Persistence.Application.Common.Models;
 
 namespace TradingProject.Persistence.Application.Commands;
 
@@ -16,33 +17,28 @@ public class CommandHandlers(IDatabaseService db) :
     ICommandHandler<LogOpportunityCommand>,
     ICommandHandler<LogPortfolioSnapshotCommand>
 {
-    public Task Handle(LogTradeOpenCommand command, CancellationToken ct)
+    public async Task Handle(LogTradeOpenCommand command, CancellationToken ct)
     {
-        db.LogTradeOpen(command.Trade);
-        return Task.CompletedTask;
+        await db.LogTradeOpen(command.Trade, ct);
     }
 
-    public Task Handle(LogTradeCloseCommand command, CancellationToken ct)
+    public async Task Handle(LogTradeCloseCommand command, CancellationToken ct)
     {
-        db.LogTradeClose(command.TradeId, command.ClosePrice, command.PnlUsdt, command.PnlPct, command.Reason);
-        return Task.CompletedTask;
+        await db.LogTradeClose(command.TradeId, command.ClosePrice, command.PnlUsdt, command.PnlPct, command.Reason, ct);
     }
 
-    public Task Handle(UpdateTakeProfitCommand command, CancellationToken ct)
+    public async Task Handle(UpdateTakeProfitCommand command, CancellationToken ct)
     {
-        db.UpdateTakeProfit(command.TradeId, command.TakeProfit);
-        return Task.CompletedTask;
+        await db.UpdateTakeProfit(command.TradeId, command.TakeProfit, ct);
     }
 
-    public Task Handle(LogOpportunityCommand command, CancellationToken ct)
+    public async Task Handle(LogOpportunityCommand command, CancellationToken ct)
     {
-        db.LogOpportunity(command.Opportunity);
-        return Task.CompletedTask;
+        await db.LogOpportunity(command.Opportunity, ct);
     }
 
-    public Task Handle(LogPortfolioSnapshotCommand command, CancellationToken ct)
+    public async Task Handle(LogPortfolioSnapshotCommand command, CancellationToken ct)
     {
-        db.LogPortfolioSnapshot(command.Portfolio);
-        return Task.CompletedTask;
+        await db.LogPortfolioSnapshot(command.Portfolio, ct);
     }
 }

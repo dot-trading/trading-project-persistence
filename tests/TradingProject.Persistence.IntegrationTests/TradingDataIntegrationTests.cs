@@ -1,6 +1,6 @@
 using FluentAssertions;
 using System.Net.Http.Json;
-using TradingProject.Persistence.Application.Abstractions;
+using TradingProject.Persistence.Application.Common.Models;
 
 namespace TradingProject.Persistence.IntegrationTests;
 
@@ -12,10 +12,10 @@ public class TradingDataIntegrationTests(TradingPersistenceApiFactory factory)
     {
         // Arrange
         var client = factory.CreateClient();
-
+    
         // Act
         var response = await client.GetAsync("/api/TradingData/stats");
-
+    
         // Assert
         response.EnsureSuccessStatusCode();
         var stats = await response.Content.ReadFromJsonAsync<Stats>();

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using TradingProject.Persistence.Application.Queries;
 using TradingProject.Persistence.Application.Abstractions;
 using TradingProject.Persistence.Application.Commands;
+using TradingProject.Persistence.Application.Common.Models;
 
 namespace TradingProject.Persistence.Api.Controllers;
 

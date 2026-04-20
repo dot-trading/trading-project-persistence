@@ -8,6 +8,6 @@ public class GetTotalPnlQuery : IQuery<double>;
 public class GetTotalPnlQueryHandler(IDatabaseService databaseService)
     : IQueryHandler<GetTotalPnlQuery, double>
 {
-    public Task<double> Handle(GetTotalPnlQuery query, CancellationToken cancellationToken)
-        => Task.FromResult(databaseService.GetTotalPnl());
+    public async Task<double> Handle(GetTotalPnlQuery query, CancellationToken cancellationToken)
+        => await databaseService.GetTotalPnl(cancellationToken);
 }

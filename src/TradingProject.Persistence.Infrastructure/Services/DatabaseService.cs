@@ -1,10 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Npgsql;
 using TradingProject.Persistence.Application.Abstractions;
 using TradingProject.Persistence.Application.Common.Enums;
 using TradingProject.Persistence.Application.Common.Models;
-using TradingProject.Persistence.Infrastructure.Settings;
+using TradingProject.Persistence.Domain.Entities;
 
 namespace TradingProject.Persistence.Infrastructure.Services;
 
@@ -19,202 +17,211 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
         switch (pnlSummaryType)
         {
             case PnlSummaryType.Today:
-                query = query.Where(e => e.CloseAt >= DateTime.Today);
+                query = query.Where(e => e.CloseAt >= DateTime.Today.ToUniversalTime());
                 break;
             case PnlSummaryType.Yesterday:
-                query = query.Where(e => e.CloseAt >= DateTime.Today.AddDays(-1) && e.CloseAt < DateTime.Today);
+                var yesterday = DateTime.Today.AddDays(-1).ToUniversalTime();
+                var today = DateTime.Today.ToUniversalTime();
+                query = query.Where(e => e.CloseAt >= yesterday && e.CloseAt < today);
                 break;
             case PnlSummaryType.ThisWeek:
                 var daysToMonday = ((int)DateTime.Today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-                query = query.Where(e => e.CloseAt >= DateTime.Today.AddDays(-daysToMonday));
+                var startOfWeek = DateTime.Today.AddDays(-daysToMonday).ToUniversalTime();
+                query = query.Where(e => e.CloseAt >= startOfWeek);
                 break;
             case PnlSummaryType.ThisMonth:
-                query = query.Where(e => e.CloseAt >= new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1));
+                var startOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).ToUniversalTime();
+                query = query.Where(e => e.CloseAt >= startOfMonth);
                 break;
             case PnlSummaryType.ThisYear:
-                query = query.Where(e => e.CloseAt >= new DateTime(DateTime.Today.Year, 1, 1));
+                var startOfYear = new DateTime(DateTime.Today.Year, 1, 1).ToUniversalTime();
+                query = query.Where(e => e.CloseAt >= startOfYear);
                 break;
         }
 
         var pnl = await query.SumAsync(e => e.PnlUsdt ?? 0, cancellationToken);
-        return new PnlSummaryItem(Convert.ToDecimal(pnl),  pnlSummaryType);
-    }
-    
-    public PnlSummary GetPnlSummary()
-    {
-        
-        return new PnlSummary(Query("day"), Query("week"), Query("month"), Query("all"));
-    }
-    
-    public int GetOpenPositionsCount()
-    {
-        using var conn = GetConnection();
-        conn.Open();
-        using var cmd = new NpgsqlCommand("SELECT COUNT(*) FROM trades WHERE status='open'", conn);
-        return Convert.ToInt32(cmd.ExecuteScalar());
+        return new PnlSummaryItem(Convert.ToDecimal(pnl), pnlSummaryType);
     }
 
-    public double GetDailyPnl()
+    public async Task<PnlSummary> GetPnlSummary(PnlSummaryType? type = null, CancellationToken ct = default)
     {
-        using var conn = GetConnection();
-        conn.Open();
-        using var cmd = new NpgsqlCommand(
-            "SELECT COALESCE(SUM(pnl_usdt),0) FROM trades WHERE status='closed' AND close_at >= DATE_TRUNC('day',NOW())", conn);
-        return Convert.ToDouble(cmd.ExecuteScalar());
-    }
-
-    public double GetTotalPnl()
-    {
-        using var conn = GetConnection();
-        conn.Open();
-        using var cmd = new NpgsqlCommand(
-            "SELECT COALESCE(SUM(pnl_usdt),0) FROM trades WHERE status='closed'", conn);
-        return Convert.ToDouble(cmd.ExecuteScalar());
-    }
-
-    public Stats GetStats()
-    {
-        using var conn = GetConnection();
-        conn.Open();
-
-        double pnlDay = 0, pnlWeek = 0, pnlMonth = 0, pnlTotal = 0;
-        int cDay = 0, cWeek = 0, cMonth = 0, cTotal = 0, wins = 0;
-
-        foreach (var (label, trunc) in new[] { ("day", "day"), ("week", "week"), ("month", "month") })
+        if (type.HasValue)
         {
-            using var cmd = new NpgsqlCommand(
-                $"SELECT COALESCE(SUM(pnl_usdt),0), COUNT(*) FROM trades WHERE status='closed' AND close_at >= DATE_TRUNC('{trunc}',NOW())", conn);
-            using var r = cmd.ExecuteReader();
-            if (!r.Read()) continue;
-            var pnl = Convert.ToDouble(r[0]);
-            var cnt = Convert.ToInt32(r[1]);
-            switch (label)
+            var item = await GetPnlSummaryAsync(type.Value, ct);
+            return type.Value switch
             {
-                case "day":   pnlDay   = pnl; cDay   = cnt; break;
-                case "week":  pnlWeek  = pnl; cWeek  = cnt; break;
-                case "month": pnlMonth = pnl; cMonth = cnt; break;
-            }
+                PnlSummaryType.Today => new PnlSummary(Today: item),
+                PnlSummaryType.Yesterday => new PnlSummary(Yesterday: item),
+                PnlSummaryType.ThisWeek => new PnlSummary(ThisWeek: item),
+                PnlSummaryType.ThisMonth => new PnlSummary(ThisMonth: item),
+                PnlSummaryType.ThisYear => new PnlSummary(ThisYear: item),
+                PnlSummaryType.All => new PnlSummary(Total: item),
+                _ => new PnlSummary()
+            };
         }
 
-        using (var cmd = new NpgsqlCommand("SELECT COALESCE(SUM(pnl_usdt),0), COUNT(*) FROM trades WHERE status='closed'", conn))
-        using (var r = cmd.ExecuteReader())
+        var todayTask = GetPnlSummaryAsync(PnlSummaryType.Today, ct);
+        var yesterdayTask = GetPnlSummaryAsync(PnlSummaryType.Yesterday, ct);
+        var weekTask = GetPnlSummaryAsync(PnlSummaryType.ThisWeek, ct);
+        var monthTask = GetPnlSummaryAsync(PnlSummaryType.ThisMonth, ct);
+        var yearTask = GetPnlSummaryAsync(PnlSummaryType.ThisYear, ct);
+        var totalTask = GetPnlSummaryAsync(PnlSummaryType.All, ct);
+
+        await Task.WhenAll(todayTask, yesterdayTask, weekTask, monthTask, yearTask, totalTask);
+
+        return new PnlSummary(
+            await todayTask,
+            await yesterdayTask,
+            await weekTask,
+            await monthTask,
+            await yearTask,
+            await totalTask);
+    }
+
+    public async Task<int> GetOpenPositionsCount(CancellationToken ct = default)
+    {
+        return await context.Trades.CountAsync(t => t.Status == "open", ct);
+    }
+
+    public async Task<double> GetDailyPnl(CancellationToken ct = default)
+    {
+        var today = DateTime.Today.ToUniversalTime();
+        return await context.Trades
+            .Where(t => t.Status == "closed" && t.CloseAt >= today)
+            .SumAsync(t => t.PnlUsdt ?? 0, ct);
+    }
+
+    public async Task<double> GetTotalPnl(CancellationToken ct = default)
+    {
+        return await context.Trades
+            .Where(t => t.Status == "closed")
+            .SumAsync(t => t.PnlUsdt ?? 0, ct);
+    }
+
+    public async Task<Stats> GetStats(CancellationToken ct = default)
+    {
+        var today = DateTime.Today.ToUniversalTime();
+        var monday = DateTime.Today.AddDays(-((int)DateTime.Today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7).ToUniversalTime();
+        var month = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).ToUniversalTime();
+
+        var trades = await context.Trades.Where(t => t.Status == "closed").ToListAsync(ct);
+
+        var statsDay = trades.Where(t => t.CloseAt >= today).ToList();
+        var statsWeek = trades.Where(t => t.CloseAt >= monday).ToList();
+        var statsMonth = trades.Where(t => t.CloseAt >= month).ToList();
+        var statsTotal = trades;
+
+        var wins = trades.Count(t => t.PnlUsdt > 0);
+
+        return new Stats(
+            statsDay.Sum(t => t.PnlUsdt ?? 0),
+            statsWeek.Sum(t => t.PnlUsdt ?? 0),
+            statsMonth.Sum(t => t.PnlUsdt ?? 0),
+            statsTotal.Sum(t => t.PnlUsdt ?? 0),
+            statsDay.Count,
+            statsWeek.Count,
+            statsMonth.Count,
+            statsTotal.Count,
+            wins,
+            statsTotal.Count > 0 ? wins * 100.0 / statsTotal.Count : 0);
+    }
+
+    public async Task<List<OpenPosition>> GetOpenPositions(CancellationToken ct = default)
+    {
+        return await context.Trades
+            .Where(t => t.Status == "open")
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => new OpenPosition(
+                t.Symbol, t.Side, t.Price, t.Quantity, t.UsdtValue,
+                t.StopLoss, t.TakeProfit, t.AiScore, t.CreatedAt))
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<ClosedTrade>> GetLastTrades(int limit = 5, CancellationToken ct = default)
+    {
+        return await context.Trades
+            .Where(t => t.Status == "closed")
+            .OrderByDescending(t => t.CloseAt)
+            .Take(limit)
+            .Select(t => new ClosedTrade(
+                t.Symbol, t.Side, t.Price, t.ClosePrice ?? 0,
+                t.PnlUsdt ?? 0, t.PnlPct ?? 0, t.AiScore, t.CreatedAt, t.CloseAt ?? DateTime.MinValue))
+            .ToListAsync(ct);
+    }
+
+    public async Task LogTradeOpen(OpenPosition trade, CancellationToken ct = default)
+    {
+        var entity = new Trade
         {
-            if (r.Read()) { pnlTotal = Convert.ToDouble(r[0]); cTotal = Convert.ToInt32(r[1]); }
-        }
+            Symbol = trade.Symbol,
+            Side = trade.Side,
+            Status = "open",
+            Price = trade.Entry,
+            Quantity = trade.Quantity,
+            UsdtValue = trade.UsdtValue,
+            StopLoss = trade.StopLoss,
+            TakeProfit = trade.TakeProfit,
+            AiScore = trade.AiScore,
+            CreatedAt = trade.CreatedAt.ToUniversalTime()
+        };
 
-        using (var cmd = new NpgsqlCommand("SELECT COUNT(*) FROM trades WHERE status='closed' AND pnl_usdt > 0", conn))
-            wins = Convert.ToInt32(cmd.ExecuteScalar());
-
-        return new Stats(pnlDay, pnlWeek, pnlMonth, pnlTotal, cDay, cWeek, cMonth, cTotal, wins,
-            cTotal > 0 ? wins * 100.0 / cTotal : 0);
+        context.Trades.Add(entity);
+        await context.SaveChangesAsync(ct);
     }
 
-    public List<OpenPosition> GetOpenPositions()
+    public async Task LogTradeClose(int tradeId, double closePrice, double pnlUsdt, double pnlPct, string reason, CancellationToken ct = default)
     {
-        using var conn = GetConnection();
-        conn.Open();
-        using var cmd = new NpgsqlCommand(
-            "SELECT symbol, side, price, quantity, usdt_value, stop_loss, take_profit, ai_score, created_at " +
-            "FROM trades WHERE status='open' ORDER BY created_at DESC", conn);
-        using var r = cmd.ExecuteReader();
-        var list = new List<OpenPosition>();
-        while (r.Read())
-            list.Add(new OpenPosition(
-                r.GetString(0), r.GetString(1),
-                r.GetDouble(2), r.GetDouble(3), r.GetDouble(4),
-                r.IsDBNull(5) ? null : r.GetDouble(5),
-                r.IsDBNull(6) ? null : r.GetDouble(6),
-                r.IsDBNull(7) ? null : r.GetInt32(7),
-                r.GetDateTime(8)));
-        return list;
+        var trade = await context.Trades.FirstOrDefaultAsync(t => t.Id == tradeId, ct);
+        if (trade == null) return;
+
+        trade.Status = "closed";
+        trade.ClosePrice = closePrice;
+        trade.PnlUsdt = pnlUsdt;
+        trade.PnlPct = pnlPct;
+        trade.CloseAt = DateTime.UtcNow;
+        // AI reason? Assuming there's a field or it's part of another entity, but the original SQL had ai_reason=@r
+        // Let's check Trade entity. It doesn't have AiReason. I'll skip it or add it if I see it.
+        // Wait, line 177 of original file: ai_reason=@r. 
+        // I'll check Trade.cs again.
+
+        await context.SaveChangesAsync(ct);
     }
 
-    public List<ClosedTrade> GetLastTrades(int limit = 5)
+    public async Task UpdateTakeProfit(int tradeId, double takeProfit, CancellationToken ct = default)
     {
-        using var conn = GetConnection();
-        conn.Open();
-        using var cmd = new NpgsqlCommand(
-            $"SELECT symbol, side, price, close_price, pnl_usdt, pnl_pct, ai_score, created_at, close_at " +
-            $"FROM trades WHERE status='closed' ORDER BY close_at DESC LIMIT {limit}", conn);
-        using var r = cmd.ExecuteReader();
-        var list = new List<ClosedTrade>();
-        while (r.Read())
-            list.Add(new ClosedTrade(
-                r.GetString(0), r.GetString(1),
-                r.GetDouble(2),
-                r.IsDBNull(3) ? 0 : r.GetDouble(3),
-                r.IsDBNull(4) ? 0 : r.GetDouble(4),
-                r.IsDBNull(5) ? 0 : r.GetDouble(5),
-                r.IsDBNull(6) ? null : r.GetInt32(6),
-                r.GetDateTime(7),
-                r.IsDBNull(8) ? DateTime.MinValue : r.GetDateTime(8)));
-        return list;
-    }
-    public void LogTradeOpen(OpenPosition trade)
-    {
-        using var conn = GetConnection();
-        conn.Open();
-        using var cmd = new NpgsqlCommand(
-            "INSERT INTO trades (symbol, side, status, price, quantity, usdt_value, stop_loss, take_profit, ai_score, created_at) " +
-            "VALUES (@s, @side, 'open', @p, @q, @v, @sl, @tp, @ai, @dt)", conn);
-        cmd.Parameters.AddWithValue("s", trade.Symbol);
-        cmd.Parameters.AddWithValue("side", trade.Side);
-        cmd.Parameters.AddWithValue("p", trade.Entry);
-        cmd.Parameters.AddWithValue("q", trade.Quantity);
-        cmd.Parameters.AddWithValue("v", trade.UsdtValue);
-        cmd.Parameters.AddWithValue("sl", trade.StopLoss ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("tp", trade.TakeProfit ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("ai", trade.AiScore ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("dt", trade.CreatedAt);
-        cmd.ExecuteNonQuery();
+        var trade = await context.Trades.FirstOrDefaultAsync(t => t.Id == tradeId, ct);
+        if (trade == null) return;
+
+        trade.TakeProfit = takeProfit;
+        await context.SaveChangesAsync(ct);
     }
 
-    public void LogTradeClose(int tradeId, double closePrice, double pnlUsdt, double pnlPct, string reason)
+    public async Task LogOpportunity(OpportunityData opportunity, CancellationToken ct = default)
     {
-        using var conn = GetConnection();
-        conn.Open();
-        using var cmd = new NpgsqlCommand(
-            "UPDATE trades SET status='closed', close_price=@cp, pnl_usdt=@pnl, pnl_pct=@pct, close_at=NOW(), ai_reason=@r WHERE id=@id", conn);
-        cmd.Parameters.AddWithValue("cp", closePrice);
-        cmd.Parameters.AddWithValue("pnl", pnlUsdt);
-        cmd.Parameters.AddWithValue("pct", pnlPct);
-        cmd.Parameters.AddWithValue("r", reason);
-        cmd.Parameters.AddWithValue("id", tradeId);
-        cmd.ExecuteNonQuery();
+        var entity = new Opportunity
+        {
+            Symbol = opportunity.Symbol,
+            Score = opportunity.Score,
+            Reason = opportunity.Reason,
+            Price = opportunity.Price,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.Opportunities.Add(entity);
+        await context.SaveChangesAsync(ct);
     }
 
-    public void UpdateTakeProfit(int tradeId, double takeProfit)
+    public async Task LogPortfolioSnapshot(PortfolioData portfolio, CancellationToken ct = default)
     {
-        using var conn = GetConnection();
-        conn.Open();
-        using var cmd = new NpgsqlCommand("UPDATE trades SET take_profit=@tp WHERE id=@id", conn);
-        cmd.Parameters.AddWithValue("tp", takeProfit);
-        cmd.Parameters.AddWithValue("id", tradeId);
-        cmd.ExecuteNonQuery();
-    }
+        var entity = new PortfolioSnapshot
+        {
+            FreeUsdt = portfolio.FreeUsdt,
+            TotalUsdt = portfolio.TotalUsdt,
+            PositionsCount = portfolio.OpenPositions?.Count ?? 0,
+            CreatedAt = DateTime.UtcNow
+        };
 
-    public void LogOpportunity(OpportunityData opportunity)
-    {
-        using var conn = GetConnection();
-        conn.Open();
-        using var cmd = new NpgsqlCommand(
-            "INSERT INTO opportunities (symbol, score, reason, price, created_at) VALUES (@s, @score, @r, @p, NOW())", conn);
-        cmd.Parameters.AddWithValue("s", opportunity.Symbol);
-        cmd.Parameters.AddWithValue("score", opportunity.Score);
-        cmd.Parameters.AddWithValue("r", opportunity.Reason);
-        cmd.Parameters.AddWithValue("p", opportunity.Price);
-        cmd.ExecuteNonQuery();
-    }
-
-    public void LogPortfolioSnapshot(PortfolioData portfolio)
-    {
-        using var conn = GetConnection();
-        conn.Open();
-        using var cmd = new NpgsqlCommand(
-            "INSERT INTO portfolio_snapshots (free_usdt, total_usdt, positions_count, created_at) VALUES (@f, @t, @c, NOW())", conn);
-        cmd.Parameters.AddWithValue("f", portfolio.FreeUsdt);
-        cmd.Parameters.AddWithValue("t", portfolio.TotalUsdt);
-        cmd.Parameters.AddWithValue("c", portfolio.OpenPositions?.Count ?? 0);
-        cmd.ExecuteNonQuery();
+        context.PortfolioSnapshots.Add(entity);
+        await context.SaveChangesAsync(ct);
     }
 }

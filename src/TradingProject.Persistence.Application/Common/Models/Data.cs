@@ -3,12 +3,12 @@ using TradingProject.Persistence.Application.Common.Enums;
 namespace TradingProject.Persistence.Application.Common.Models;
 
 public record PnlSummary(
-    PnlSummaryItem Today,
-    PnlSummaryItem Yesterday,
-    PnlSummaryItem ThisWeek,
-    PnlSummaryItem ThisMonth,
-    PnlSummaryItem ThisYear,
-    PnlSummaryItem Total);
+    PnlSummaryItem? Today = null,
+    PnlSummaryItem? Yesterday = null,
+    PnlSummaryItem? ThisWeek = null,
+    PnlSummaryItem? ThisMonth = null,
+    PnlSummaryItem? ThisYear = null,
+    PnlSummaryItem? Total = null);
 
 public record PnlSummaryItem(decimal Value, PnlSummaryType PnlSummaryType);
 

@@ -8,6 +8,6 @@ public class GetOpenPositionsCountQuery : IQuery<int>;
 public class GetOpenPositionsCountQueryHandler(IDatabaseService databaseService)
     : IQueryHandler<GetOpenPositionsCountQuery, int>
 {
-    public Task<int> Handle(GetOpenPositionsCountQuery query, CancellationToken cancellationToken)
-        => Task.FromResult(databaseService.GetOpenPositionsCount());
+    public async Task<int> Handle(GetOpenPositionsCountQuery query, CancellationToken cancellationToken)
+        => await databaseService.GetOpenPositionsCount(cancellationToken);
 }
