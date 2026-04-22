@@ -11,5 +11,7 @@ public class Opportunity
     public double? StopLossPct { get; set; }
     public double Price { get; set; }
     public bool Acted { get; set; }
+    public bool IsApproved { get; set; }
+    public string? ValidationReason { get; set; }
     public DateTime CreatedAt { get; set; }
 }

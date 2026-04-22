@@ -39,6 +39,10 @@ public class TradingDataController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> GetLastTrades(CancellationToken ct, [FromQuery] int limit = 5)
         => Ok(await mediator.SendQueryAsync(new GetLastTradesQuery(limit), ct));
 
+    [HttpGet("opportunities/recent")]
+    public async Task<IActionResult> GetRecentOpportunities(CancellationToken ct, [FromQuery] int hours = 1)
+        => Ok(await mediator.SendQueryAsync(new GetRecentOpportunitiesQuery(hours), ct));
+
     [HttpPost("trades/open")]
     public async Task<IActionResult> LogTradeOpen([FromBody] OpenPosition trade, CancellationToken ct)
     {

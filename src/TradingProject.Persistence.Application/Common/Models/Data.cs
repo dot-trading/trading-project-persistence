@@ -12,7 +12,7 @@ public record PnlSummary(
 
 public record PnlSummaryItem(decimal Value, PnlSummaryType PnlSummaryType);
 
-public record OpportunityData(string Symbol, int Score, string Reason, double Price);
+public record OpportunityData(string Symbol, int Score, string Reason, double Price, bool IsApproved = true, string? ValidationReason = null);
 public record PortfolioData(double FreeUsdt, double TotalUsdt, List<PortfolioPositionData> OpenPositions);
 public record PortfolioPositionData(string Symbol, double UsdtValue);
 

@@ -205,11 +205,24 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
             Score = opportunity.Score,
             Reason = opportunity.Reason,
             Price = opportunity.Price,
+            IsApproved = opportunity.IsApproved,
+            ValidationReason = opportunity.ValidationReason,
             CreatedAt = DateTime.UtcNow
         };
 
         context.Opportunities.Add(entity);
         await context.SaveChangesAsync(ct);
+    }
+
+    public async Task<List<OpportunityData>> GetRecentOpportunities(int hours, CancellationToken ct = default)
+    {
+        var cutoff = DateTime.UtcNow.AddHours(-hours);
+        return await context.Opportunities
+            .Where(o => o.CreatedAt >= cutoff)
+            .OrderByDescending(o => o.CreatedAt)
+            .Select(o => new OpportunityData(
+                o.Symbol, o.Score, o.Reason, o.Price, o.IsApproved, o.ValidationReason))
+            .ToListAsync(ct);
     }
 
     public async Task LogPortfolioSnapshot(PortfolioData portfolio, CancellationToken ct = default)
