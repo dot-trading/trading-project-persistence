@@ -173,7 +173,7 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
     public async Task LogTradeClose(int tradeId, double closePrice, double pnlUsdt, double pnlPct, string reason, CancellationToken ct = default)
     {
         var trade = await context.Trades.FirstOrDefaultAsync(t => t.Id == tradeId, ct);
-        if (trade == null) return;
+        if (trade == null || trade.Status == "closed") return;
 
         trade.Status = "closed";
         trade.ClosePrice = closePrice;
