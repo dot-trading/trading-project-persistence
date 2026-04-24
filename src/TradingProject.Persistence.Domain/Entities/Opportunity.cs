@@ -14,4 +14,16 @@ public class Opportunity
     public bool IsApproved { get; set; }
     public string? ValidationReason { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    public Opportunity() { }
+    
+    public Opportunity(string symbol, int score, string signal, string reason, double price)
+    {
+        Symbol = symbol;
+        Score = score;
+        Signal = signal;
+        Reason = reason;
+        Price = price;
+        CreatedAt = DateTime.UtcNow;
+    }
 }

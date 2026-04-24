@@ -1,4 +1,5 @@
 using TradingProject.Persistence.Application.Common.Enums;
+using System.Text.Json.Serialization;
 
 namespace TradingProject.Persistence.Application.Common.Models;
 
@@ -12,9 +13,50 @@ public record PnlSummary(
 
 public record PnlSummaryItem(decimal Value, PnlSummaryType PnlSummaryType);
 
-public record OpportunityData(string Symbol, int Score, string Reason, double Price, bool IsApproved = true, string? ValidationReason = null);
-public record PortfolioData(double FreeUsdt, double TotalUsdt, List<PortfolioPositionData> OpenPositions);
-public record PortfolioPositionData(string Symbol, double UsdtValue);
+public class OpportunityData
+{
+    [JsonPropertyName("symbol")]
+    public string Symbol { get; set; } = string.Empty;
+    
+    [JsonPropertyName("score")]
+    public int Score { get; set; }
+    
+    [JsonPropertyName("signal")]
+    public string Signal { get; set; } = "SIGNAL";
+    
+    [JsonPropertyName("reason")]
+    public string Reason { get; set; } = string.Empty;
+    
+    [JsonPropertyName("price")]
+    public double Price { get; set; }
+    
+    [JsonPropertyName("isApproved")]
+    public bool IsApproved { get; set; } = true;
+    
+    [JsonPropertyName("validationReason")]
+    public string? ValidationReason { get; set; }
+}
+
+public class PortfolioData
+{
+    [JsonPropertyName("freeUsdt")]
+    public double FreeUsdt { get; set; }
+    
+    [JsonPropertyName("totalUsdt")]
+    public double TotalUsdt { get; set; }
+    
+    [JsonPropertyName("openPositions")]
+    public List<PortfolioPositionData> OpenPositions { get; set; } = new();
+}
+
+public class PortfolioPositionData
+{
+    [JsonPropertyName("symbol")]
+    public string Symbol { get; set; } = string.Empty;
+    
+    [JsonPropertyName("usdtValue")]
+    public double UsdtValue { get; set; }
+}
 
 public record Stats(
     double PnlDay, double PnlWeek, double PnlMonth, double PnlTotal,

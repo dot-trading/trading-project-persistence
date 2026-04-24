@@ -203,6 +203,7 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
         {
             Symbol = opportunity.Symbol,
             Score = opportunity.Score,
+            Signal = opportunity.Signal ?? "NEUTRAL",
             Reason = opportunity.Reason,
             Price = opportunity.Price,
             IsApproved = opportunity.IsApproved,
@@ -220,8 +221,16 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
         return await context.Opportunities
             .Where(o => o.CreatedAt >= cutoff)
             .OrderByDescending(o => o.CreatedAt)
-            .Select(o => new OpportunityData(
-                o.Symbol, o.Score, o.Reason, o.Price, o.IsApproved, o.ValidationReason))
+            .Select(o => new OpportunityData
+            {
+                Symbol = o.Symbol,
+                Score = o.Score,
+                Signal = o.Signal,
+                Reason = o.Reason,
+                Price = o.Price,
+                IsApproved = o.IsApproved,
+                ValidationReason = o.ValidationReason
+            })
             .ToListAsync(ct);
     }
 

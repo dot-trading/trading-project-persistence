@@ -20,6 +20,8 @@ public class OpportunityConfiguration : IEntityTypeConfiguration<Opportunity>
         entity.Property(o => o.StopLossPct).HasColumnName("stop_loss_pct");
         entity.Property(o => o.Price).HasColumnName("price");
         entity.Property(o => o.Acted).HasColumnName("acted");
+        entity.Property(o => o.IsApproved).HasColumnName("is_approved");
+        entity.Property(o => o.ValidationReason).HasColumnName("validation_reason");
         entity.Property(o => o.CreatedAt).HasColumnName("created_at");
     }
 }
