@@ -1,0 +1,2 @@
+- [ ] rename columns that contains spot name, example total_usdt become total.
+- [ ] remove TradingDataController

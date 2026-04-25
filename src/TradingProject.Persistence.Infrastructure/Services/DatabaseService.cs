@@ -39,7 +39,7 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
                 break;
         }
 
-        var pnl = await query.SumAsync(e => e.PnlUsdt ?? 0, cancellationToken);
+        var pnl = await query.SumAsync(e => e.Pnl ?? 0, cancellationToken);
         return new PnlSummaryItem(Convert.ToDecimal(pnl), pnlSummaryType);
     }
 
@@ -88,14 +88,14 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
         var today = DateTime.Today.ToUniversalTime();
         return await context.Trades
             .Where(t => t.Status == "closed" && t.CloseAt >= today)
-            .SumAsync(t => t.PnlUsdt ?? 0, ct);
+            .SumAsync(t => t.Pnl ?? 0, ct);
     }
 
     public async Task<double> GetTotalPnl(CancellationToken ct = default)
     {
         return await context.Trades
             .Where(t => t.Status == "closed")
-            .SumAsync(t => t.PnlUsdt ?? 0, ct);
+            .SumAsync(t => t.Pnl ?? 0, ct);
     }
 
     public async Task<Stats> GetStats(CancellationToken ct = default)
@@ -111,13 +111,13 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
         var statsMonth = trades.Where(t => t.CloseAt >= month).ToList();
         var statsTotal = trades;
 
-        var wins = trades.Count(t => t.PnlUsdt > 0);
+        var wins = trades.Count(t => t.Pnl > 0);
 
         return new Stats(
-            statsDay.Sum(t => t.PnlUsdt ?? 0),
-            statsWeek.Sum(t => t.PnlUsdt ?? 0),
-            statsMonth.Sum(t => t.PnlUsdt ?? 0),
-            statsTotal.Sum(t => t.PnlUsdt ?? 0),
+            statsDay.Sum(t => t.Pnl ?? 0),
+            statsWeek.Sum(t => t.Pnl ?? 0),
+            statsMonth.Sum(t => t.Pnl ?? 0),
+            statsTotal.Sum(t => t.Pnl ?? 0),
             statsDay.Count,
             statsWeek.Count,
             statsMonth.Count,
@@ -134,7 +134,7 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
             .ToListAsync(ct);
 
         return trades.Select(t => new OpenPosition(
-            t.Id, t.Symbol, t.Side, t.Price, t.Quantity, t.UsdtValue,
+            t.Id, t.Symbol, t.Side, t.Price, t.Quantity, t.Value,
             t.StopLoss, t.TakeProfit, t.AiScore, t.CreatedAt)).ToList();
     }
 
@@ -146,7 +146,7 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
             .Take(limit)
             .Select(t => new ClosedTrade(
                 t.Symbol, t.Side, t.Price, t.ClosePrice ?? 0,
-                t.PnlUsdt ?? 0, t.PnlPct ?? 0, t.AiScore, t.CreatedAt, t.CloseAt ?? DateTime.MinValue))
+                t.Pnl ?? 0, t.PnlPct ?? 0, t.AiScore, t.CreatedAt, t.CloseAt ?? DateTime.MinValue))
             .ToListAsync(ct);
     }
 
@@ -159,7 +159,7 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
             Status = "open",
             Price = trade.Entry,
             Quantity = trade.Quantity,
-            UsdtValue = trade.UsdtValue,
+            Value = trade.UsdtValue,
             StopLoss = trade.StopLoss,
             TakeProfit = trade.TakeProfit,
             AiScore = trade.AiScore,
@@ -177,7 +177,7 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
 
         trade.Status = "closed";
         trade.ClosePrice = closePrice;
-        trade.PnlUsdt = pnlUsdt;
+        trade.Pnl = pnlUsdt;
         trade.PnlPct = pnlPct;
         trade.CloseAt = DateTime.UtcNow;
         // AI reason? Assuming there's a field or it's part of another entity, but the original SQL had ai_reason=@r
@@ -238,8 +238,8 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
     {
         var entity = new PortfolioSnapshot
         {
-            FreeUsdt = portfolio.FreeUsdt,
-            TotalUsdt = portfolio.TotalUsdt,
+            Free = portfolio.FreeUsdt,
+            Total = portfolio.TotalUsdt,
             PositionsCount = portfolio.OpenPositions?.Count ?? 0,
             CreatedAt = DateTime.UtcNow
         };

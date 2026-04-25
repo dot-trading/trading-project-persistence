@@ -8,12 +8,12 @@ public class Trade
     public string Status { get; set; } = string.Empty;
     public double Price { get; set; }
     public double Quantity { get; set; }
-    public double UsdtValue { get; set; }
+    public double Value { get; set; }
     public double? StopLoss { get; set; }
     public double? TakeProfit { get; set; }
     public int? AiScore { get; set; }
     public double? ClosePrice { get; set; }
-    public double? PnlUsdt { get; set; }
+    public double? Pnl { get; set; }
     public double? PnlPct { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? CloseAt { get; set; }
