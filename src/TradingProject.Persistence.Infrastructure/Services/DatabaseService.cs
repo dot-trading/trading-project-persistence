@@ -83,28 +83,36 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
         return await context.Trades.CountAsync(t => t.Status == "open", ct);
     }
 
-    public async Task<double> GetDailyPnl(CancellationToken ct = default)
+    public async Task<double> GetDailyPnl(string? quoteAsset = null, CancellationToken ct = default)
     {
         var today = DateTime.Today.ToUniversalTime();
-        return await context.Trades
-            .Where(t => t.Status == "closed" && t.CloseAt >= today)
-            .SumAsync(t => t.Pnl ?? 0, ct);
+        var query = context.Trades.Where(t => t.Status == "closed" && t.CloseAt >= today);
+        if (!string.IsNullOrEmpty(quoteAsset))
+            query = query.Where(t => t.Symbol.EndsWith(quoteAsset));
+            
+        return await query.SumAsync(t => t.Pnl ?? 0, ct);
     }
 
-    public async Task<double> GetTotalPnl(CancellationToken ct = default)
+    public async Task<double> GetTotalPnl(string? quoteAsset = null, CancellationToken ct = default)
     {
-        return await context.Trades
-            .Where(t => t.Status == "closed")
-            .SumAsync(t => t.Pnl ?? 0, ct);
+        var query = context.Trades.Where(t => t.Status == "closed");
+        if (!string.IsNullOrEmpty(quoteAsset))
+            query = query.Where(t => t.Symbol.EndsWith(quoteAsset));
+
+        return await query.SumAsync(t => t.Pnl ?? 0, ct);
     }
 
-    public async Task<Stats> GetStats(CancellationToken ct = default)
+    public async Task<Stats> GetStats(string? quoteAsset = null, CancellationToken ct = default)
     {
         var today = DateTime.Today.ToUniversalTime();
         var monday = DateTime.Today.AddDays(-((int)DateTime.Today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7).ToUniversalTime();
         var month = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).ToUniversalTime();
 
-        var trades = await context.Trades.Where(t => t.Status == "closed").ToListAsync(ct);
+        var query = context.Trades.Where(t => t.Status == "closed");
+        if (!string.IsNullOrEmpty(quoteAsset))
+            query = query.Where(t => t.Symbol.EndsWith(quoteAsset));
+
+        var trades = await query.ToListAsync(ct);
 
         var statsDay = trades.Where(t => t.CloseAt >= today).ToList();
         var statsWeek = trades.Where(t => t.CloseAt >= monday).ToList();

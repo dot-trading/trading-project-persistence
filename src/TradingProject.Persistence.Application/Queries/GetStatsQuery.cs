@@ -4,11 +4,11 @@ using TradingProject.Persistence.Application.Common.Models;
 
 namespace TradingProject.Persistence.Application.Queries;
 
-public class GetStatsQuery : IQuery<Stats>;
+public record GetStatsQuery(string? QuoteAsset = null) : IQuery<Stats>;
 
 public class GetStatsQueryHandler(IDatabaseService databaseService)
     : IQueryHandler<GetStatsQuery, Stats>
 {
     public async Task<Stats> Handle(GetStatsQuery query, CancellationToken cancellationToken)
-        => await databaseService.GetStats(cancellationToken);
+        => await databaseService.GetStats(query.QuoteAsset, cancellationToken);
 }

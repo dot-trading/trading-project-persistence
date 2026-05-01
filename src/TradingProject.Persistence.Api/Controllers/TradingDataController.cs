@@ -15,16 +15,16 @@ public class TradingDataController(IMediator mediator) : ControllerBase
         => Ok(await mediator.SendQueryAsync(new GetOpenPositionsCountQuery(), ct));
 
     [HttpGet("pnl/daily")]
-    public async Task<IActionResult> GetDailyPnl(CancellationToken ct)
-        => Ok(await mediator.SendQueryAsync(new GetDailyPnlQuery(), ct));
+    public async Task<IActionResult> GetDailyPnl([FromQuery] string? quoteAsset, CancellationToken ct)
+        => Ok(await mediator.SendQueryAsync(new GetDailyPnlQuery(quoteAsset), ct));
 
     [HttpGet("pnl/total")]
-    public async Task<IActionResult> GetTotalPnl(CancellationToken ct)
-        => Ok(await mediator.SendQueryAsync(new GetTotalPnlQuery(), ct));
+    public async Task<IActionResult> GetTotalPnl([FromQuery] string? quoteAsset, CancellationToken ct)
+        => Ok(await mediator.SendQueryAsync(new GetTotalPnlQuery(quoteAsset), ct));
 
     [HttpGet("stats")]
-    public async Task<IActionResult> GetStats(CancellationToken ct)
-        => Ok(await mediator.SendQueryAsync(new GetStatsQuery(), ct));
+    public async Task<IActionResult> GetStats([FromQuery] string? quoteAsset, CancellationToken ct)
+        => Ok(await mediator.SendQueryAsync(new GetStatsQuery(quoteAsset), ct));
 
     [HttpGet("pnl/summary")]
     public async Task<IActionResult> GetPnlSummary(CancellationToken ct)
