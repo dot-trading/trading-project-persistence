@@ -1,3 +1,4 @@
+using AutoMapper;
 using Cortex.Mediator.Commands;
 using TradingProject.Persistence.Application.Abstractions;
 using TradingProject.Persistence.Domain.Entities;
@@ -11,31 +12,16 @@ public record CreateOpportunityRequest(
 
 public record CreateOpportunityCommand(CreateOpportunityRequest Opportunity) : ICommand<OpportunityResponse>;
 
-public class CreateOpportunityCommandHandler(ITradingDbContext context)
+public class CreateOpportunityCommandHandler(ITradingDbContext context, IMapper mapper)
     : ICommandHandler<CreateOpportunityCommand, OpportunityResponse>
 {
     public async Task<OpportunityResponse> Handle(CreateOpportunityCommand command, CancellationToken ct)
     {
-        var req = command.Opportunity;
-        var entity = new Opportunity
-        {
-            Symbol = req.Symbol,
-            Score = req.Score,
-            Signal = req.Signal,
-            Reason = req.Reason,
-            Price = req.Price,
-            TargetPct = req.TargetPct,
-            StopLossPct = req.StopLossPct,
-            IsApproved = req.IsApproved,
-            ValidationReason = req.ValidationReason,
-            CreatedAt = DateTime.UtcNow
-        };
+        var entity = mapper.Map<Opportunity>(command.Opportunity);
+        
         context.Opportunities.Add(entity);
         await context.SaveChangesAsync(ct);
 
-        return new OpportunityResponse(
-            entity.Id, entity.Symbol, entity.Score, entity.Signal, entity.Reason,
-            entity.TargetPct, entity.StopLossPct, entity.Price,
-            entity.Acted, entity.IsApproved, entity.ValidationReason, entity.CreatedAt);
+        return mapper.Map<OpportunityResponse>(entity);
     }
 }
