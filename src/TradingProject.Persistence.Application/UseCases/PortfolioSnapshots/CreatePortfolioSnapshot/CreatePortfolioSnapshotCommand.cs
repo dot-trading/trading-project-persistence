@@ -1,3 +1,4 @@
+using AutoMapper;
 using Cortex.Mediator.Commands;
 using TradingProject.Persistence.Application.Abstractions;
 using TradingProject.Persistence.Domain.Entities;
@@ -10,26 +11,16 @@ public record CreatePortfolioSnapshotRequest(
 
 public record CreatePortfolioSnapshotCommand(CreatePortfolioSnapshotRequest Snapshot) : ICommand<PortfolioSnapshotResponse>;
 
-public class CreatePortfolioSnapshotCommandHandler(ITradingDbContext context)
+public class CreatePortfolioSnapshotCommandHandler(ITradingDbContext context, IMapper mapper)
     : ICommandHandler<CreatePortfolioSnapshotCommand, PortfolioSnapshotResponse>
 {
     public async Task<PortfolioSnapshotResponse> Handle(CreatePortfolioSnapshotCommand command, CancellationToken ct)
     {
-        var req = command.Snapshot;
-        var entity = new PortfolioSnapshot
-        {
-            Total = req.Total,
-            Free = req.Free,
-            PositionsCount = req.PositionsCount,
-            DailyPnl = req.DailyPnl,
-            TotalPnl = req.TotalPnl,
-            CreatedAt = DateTime.UtcNow
-        };
+        var entity = mapper.Map<PortfolioSnapshot>(command.Snapshot);
+        
         context.PortfolioSnapshots.Add(entity);
         await context.SaveChangesAsync(ct);
 
-        return new PortfolioSnapshotResponse(
-            entity.Id, entity.Total, entity.Free,
-            entity.PositionsCount, entity.DailyPnl, entity.TotalPnl, entity.CreatedAt);
+        return mapper.Map<PortfolioSnapshotResponse>(entity);
     }
 }

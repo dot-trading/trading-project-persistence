@@ -12,16 +12,18 @@ public class PortfolioSnapshotsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetPortfolioSnapshots(
-        CancellationToken ct,
-        [FromQuery] int limit = 50)
-        => Ok(await mediator.SendQueryAsync(new GetPortfolioSnapshotsQuery(limit), ct));
+        [FromQuery] int limit = 50,
+        [FromQuery] int page = 1,
+        CancellationToken cancellationToken = default)
+        => Ok(await mediator.SendQueryAsync(new GetPortfolioSnapshotsQuery(limit, page), cancellationToken));
 
     [HttpPost]
     public async Task<IActionResult> CreatePortfolioSnapshot(
-        [FromBody] CreatePortfolioSnapshotRequest request, CancellationToken ct)
+        [FromBody] CreatePortfolioSnapshotRequest request,
+        CancellationToken cancellationToken = default)
     {
         var snapshot = await mediator.SendCommandAsync<CreatePortfolioSnapshotCommand, PortfolioSnapshotResponse>(
-            new CreatePortfolioSnapshotCommand(request), ct);
+            new CreatePortfolioSnapshotCommand(request), cancellationToken);
         return CreatedAtAction(nameof(GetPortfolioSnapshots), snapshot);
     }
 }
