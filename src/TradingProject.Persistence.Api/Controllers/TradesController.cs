@@ -13,25 +13,33 @@ public class TradesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetTrades(
-        CancellationToken ct,
         [FromQuery] int limit = 50,
+        [FromQuery] int page = 1,
         [FromQuery] string? status = null,
-        [FromQuery] string? symbol = null)
-        => Ok(await mediator.SendQueryAsync(new GetTradesQuery(limit, status, symbol), ct));
+        [FromQuery] string? symbol = null,
+        CancellationToken cancellationToken = default)
+        => Ok(await mediator.SendQueryAsync(
+            new GetTradesQuery(limit, page, status, symbol),
+            cancellationToken));
 
     [HttpPost]
-    public async Task<IActionResult> CreateTrade([FromBody] CreateTradeRequest request, CancellationToken ct)
+    public async Task<IActionResult> CreateTrade(
+        [FromBody] CreateTradeRequest request,
+        CancellationToken cancellationToken = default)
     {
         var trade = await mediator.SendCommandAsync<CreateTradeCommand, TradeResponse>(
-            new CreateTradeCommand(request), ct);
+            new CreateTradeCommand(request), cancellationToken);
         return CreatedAtAction(nameof(GetTrades), trade);
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> UpdateTrade(int id, [FromBody] UpdateTradeRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateTrade(
+        int id,
+        [FromBody] UpdateTradeRequest request,
+        CancellationToken cancellationToken = default)
     {
         var trade = await mediator.SendCommandAsync<UpdateTradeCommand, TradeResponse?>(
-            new UpdateTradeCommand(id, request), ct);
+            new UpdateTradeCommand(id, request), cancellationToken);
         return trade is null ? NotFound() : Ok(trade);
     }
 }

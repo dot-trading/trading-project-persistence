@@ -1,3 +1,4 @@
+using AutoMapper;
 using Cortex.Mediator.Commands;
 using TradingProject.Persistence.Application.Abstractions;
 using TradingProject.Persistence.Domain.Entities;
@@ -11,33 +12,16 @@ public record CreateTradeRequest(
 
 public record CreateTradeCommand(CreateTradeRequest Trade) : ICommand<TradeResponse>;
 
-public class CreateTradeCommandHandler(ITradingDbContext context)
+public class CreateTradeCommandHandler(ITradingDbContext context, IMapper mapper)
     : ICommandHandler<CreateTradeCommand, TradeResponse>
 {
     public async Task<TradeResponse> Handle(CreateTradeCommand command, CancellationToken ct)
     {
-        var req = command.Trade;
-        var entity = new Trade
-        {
-            Symbol = req.Symbol,
-            Side = req.Side,
-            Status = "open",
-            Price = req.Price,
-            Quantity = req.Quantity,
-            Value = req.Value,
-            StopLoss = req.StopLoss,
-            TakeProfit = req.TakeProfit,
-            AiScore = req.AiScore,
-            CreatedAt = DateTime.UtcNow
-        };
+        var entity = mapper.Map<Trade>(command.Trade);
+        
         context.Trades.Add(entity);
         await context.SaveChangesAsync(ct);
 
-        return new TradeResponse(
-            entity.Id, entity.Symbol, entity.Side, entity.Status,
-            entity.Price, entity.Quantity, entity.Value,
-            entity.StopLoss, entity.TakeProfit, entity.AiScore,
-            entity.ClosePrice, entity.Pnl, entity.PnlPct,
-            entity.CreatedAt, entity.CloseAt);
+        return mapper.Map<TradeResponse>(entity);
     }
 }

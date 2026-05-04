@@ -1,3 +1,4 @@
+using AutoMapper;
 using Cortex.Mediator.Commands;
 using Microsoft.EntityFrameworkCore;
 using TradingProject.Persistence.Application.Abstractions;
@@ -10,7 +11,7 @@ public record UpdateTradeRequest(
 
 public record UpdateTradeCommand(int Id, UpdateTradeRequest Updates) : ICommand<TradeResponse?>;
 
-public class UpdateTradeCommandHandler(ITradingDbContext context)
+public class UpdateTradeCommandHandler(ITradingDbContext context, IMapper mapper)
     : ICommandHandler<UpdateTradeCommand, TradeResponse?>
 {
     public async Task<TradeResponse?> Handle(UpdateTradeCommand command, CancellationToken ct)
@@ -18,24 +19,13 @@ public class UpdateTradeCommandHandler(ITradingDbContext context)
         var trade = await context.Trades.FirstOrDefaultAsync(t => t.Id == command.Id, ct);
         if (trade is null) return null;
 
-        var u = command.Updates;
-        if (u.Status is not null) trade.Status = u.Status;
-        if (u.ClosePrice is not null) trade.ClosePrice = u.ClosePrice;
-        if (u.Pnl is not null) trade.Pnl = u.Pnl;
-        if (u.PnlPct is not null) trade.PnlPct = u.PnlPct;
-        if (u.TakeProfit is not null) trade.TakeProfit = u.TakeProfit;
-        if (u.StopLoss is not null) trade.StopLoss = u.StopLoss;
+        mapper.Map(command.Updates, trade);
 
-        if (u.Status == "closed" && trade.CloseAt is null)
+        if (command.Updates.Status == "closed" && trade.CloseAt is null)
             trade.CloseAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(ct);
 
-        return new TradeResponse(
-            trade.Id, trade.Symbol, trade.Side, trade.Status,
-            trade.Price, trade.Quantity, trade.Value,
-            trade.StopLoss, trade.TakeProfit, trade.AiScore,
-            trade.ClosePrice, trade.Pnl, trade.PnlPct,
-            trade.CreatedAt, trade.CloseAt);
+        return mapper.Map<TradeResponse>(trade);
     }
 }

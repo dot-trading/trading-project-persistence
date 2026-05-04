@@ -1,13 +1,15 @@
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Cortex.Mediator.Queries;
 using Microsoft.EntityFrameworkCore;
 using TradingProject.Persistence.Application.Abstractions;
 
 namespace TradingProject.Persistence.Application.UseCases.Trades.GetTrades;
 
-public record GetTradesQuery(int Limit = 50, string? Status = null, string? Symbol = null)
+public record GetTradesQuery(int Limit = 50, int Page = 1, string? Status = null, string? Symbol = null)
     : IQuery<List<TradeResponse>>;
 
-public class GetTradesQueryHandler(ITradingDbContext context)
+public class GetTradesQueryHandler(ITradingDbContext context, IMapper mapper)
     : IQueryHandler<GetTradesQuery, List<TradeResponse>>
 {
     public async Task<List<TradeResponse>> Handle(GetTradesQuery query, CancellationToken ct)
@@ -18,13 +20,9 @@ public class GetTradesQueryHandler(ITradingDbContext context)
 
         return await q
             .OrderByDescending(t => t.CreatedAt)
+            .Skip((query.Page - 1) * query.Limit)
             .Take(query.Limit)
-            .Select(t => new TradeResponse(
-                t.Id, t.Symbol, t.Side, t.Status,
-                t.Price, t.Quantity, t.Value,
-                t.StopLoss, t.TakeProfit, t.AiScore,
-                t.ClosePrice, t.Pnl, t.PnlPct,
-                t.CreatedAt, t.CloseAt))
+            .ProjectTo<TradeResponse>(mapper.ConfigurationProvider)
             .ToListAsync(ct);
     }
 }
