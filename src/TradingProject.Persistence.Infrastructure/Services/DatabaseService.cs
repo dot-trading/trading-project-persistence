@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using TradingProject.Persistence.Application.Abstractions;
 using TradingProject.Persistence.Application.Common.Enums;
 using TradingProject.Persistence.Application.Common.Models;
@@ -6,88 +8,76 @@ using TradingProject.Persistence.Domain.Entities;
 
 namespace TradingProject.Persistence.Infrastructure.Services;
 
-public class DatabaseService(ITradingDbContext context) : IDatabaseService
+public class DatabaseService(IServiceScopeFactory scopeFactory, ILogger<DatabaseService> logger) : IDatabaseService
 {
+    static DatabaseService()
+    {
+        // Just to be sure the class is loaded
+    }
+
     public async Task<PnlSummaryItem> GetPnlSummaryAsync(
         PnlSummaryType pnlSummaryType,
         string? quoteAsset = null,
         CancellationToken cancellationToken = default)
     {
-        var query = context.Trades.Where(e => e.Status == "closed");
-        if (!string.IsNullOrEmpty(quoteAsset))
-            query = query.Where(e => e.Symbol.EndsWith(quoteAsset));
-
-        switch (pnlSummaryType)
+        var summary = await GetPnlSummary(pnlSummaryType, quoteAsset, cancellationToken);
+        return pnlSummaryType switch
         {
-            case PnlSummaryType.Today:
-                query = query.Where(e => e.CloseAt >= DateTime.Today.ToUniversalTime());
-                break;
-            case PnlSummaryType.Yesterday:
-                var yesterday = DateTime.Today.AddDays(-1).ToUniversalTime();
-                var today = DateTime.Today.ToUniversalTime();
-                query = query.Where(e => e.CloseAt >= yesterday && e.CloseAt < today);
-                break;
-            case PnlSummaryType.ThisWeek:
-                var daysToMonday = ((int)DateTime.Today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-                var startOfWeek = DateTime.Today.AddDays(-daysToMonday).ToUniversalTime();
-                query = query.Where(e => e.CloseAt >= startOfWeek);
-                break;
-            case PnlSummaryType.ThisMonth:
-                var startOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).ToUniversalTime();
-                query = query.Where(e => e.CloseAt >= startOfMonth);
-                break;
-            case PnlSummaryType.ThisYear:
-                var startOfYear = new DateTime(DateTime.Today.Year, 1, 1).ToUniversalTime();
-                query = query.Where(e => e.CloseAt >= startOfYear);
-                break;
-        }
-
-        var pnl = await query.SumAsync(e => e.Pnl ?? 0, cancellationToken);
-        return new PnlSummaryItem(Convert.ToDecimal(pnl), pnlSummaryType);
+            PnlSummaryType.Today => summary.Today!,
+            PnlSummaryType.Yesterday => summary.Yesterday!,
+            PnlSummaryType.ThisWeek => summary.ThisWeek!,
+            PnlSummaryType.ThisMonth => summary.ThisMonth!,
+            PnlSummaryType.ThisYear => summary.ThisYear!,
+            PnlSummaryType.All => summary.Total!,
+            _ => throw new ArgumentOutOfRangeException(nameof(pnlSummaryType))
+        };
     }
 
     public async Task<PnlSummary> GetPnlSummary(PnlSummaryType? type = null, string? quoteAsset = null, CancellationToken ct = default)
     {
-        if (type.HasValue)
-        {
-            var item = await GetPnlSummaryAsync(type.Value, quoteAsset, ct);
-            return type.Value switch
-            {
-                PnlSummaryType.Today => new PnlSummary(Today: item),
-                PnlSummaryType.Yesterday => new PnlSummary(Yesterday: item),
-                PnlSummaryType.ThisWeek => new PnlSummary(ThisWeek: item),
-                PnlSummaryType.ThisMonth => new PnlSummary(ThisMonth: item),
-                PnlSummaryType.ThisYear => new PnlSummary(ThisYear: item),
-                PnlSummaryType.All => new PnlSummary(Total: item),
-                _ => new PnlSummary()
-            };
-        }
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
+        
+        var query = context.Trades.AsNoTracking().Where(t => t.Status == "closed");
+        if (!string.IsNullOrEmpty(quoteAsset))
+            query = query.Where(t => t.Symbol.EndsWith(quoteAsset));
 
-        var todayTask = GetPnlSummaryAsync(PnlSummaryType.Today, quoteAsset, ct);
-        var yesterdayTask = GetPnlSummaryAsync(PnlSummaryType.Yesterday, quoteAsset, ct);
-        var weekTask = GetPnlSummaryAsync(PnlSummaryType.ThisWeek, quoteAsset, ct);
-        var monthTask = GetPnlSummaryAsync(PnlSummaryType.ThisMonth, quoteAsset, ct);
-        var yearTask = GetPnlSummaryAsync(PnlSummaryType.ThisYear, quoteAsset, ct);
-        var totalTask = GetPnlSummaryAsync(PnlSummaryType.All, quoteAsset, ct);
+        var trades = await query.ToListAsync(ct);
+        
+        var today = DateTime.Today.ToUniversalTime();
+        var yesterdayStart = DateTime.Today.AddDays(-1).ToUniversalTime();
+        var weekStart = DateTime.Today.AddDays(-((int)DateTime.Today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7).ToUniversalTime();
+        var monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).ToUniversalTime();
+        var yearStart = new DateTime(DateTime.Today.Year, 1, 1).ToUniversalTime();
 
-        await Task.WhenAll(todayTask, yesterdayTask, weekTask, monthTask, yearTask, totalTask);
+        var todaySum = trades.Where(t => t.CloseAt >= today).Sum(t => t.Pnl ?? 0);
+        var yesterdaySum = trades.Where(t => t.CloseAt >= yesterdayStart && t.CloseAt < today).Sum(t => t.Pnl ?? 0);
+        var weekSum = trades.Where(t => t.CloseAt >= weekStart).Sum(t => t.Pnl ?? 0);
+        var monthSum = trades.Where(t => t.CloseAt >= monthStart).Sum(t => t.Pnl ?? 0);
+        var yearSum = trades.Where(t => t.CloseAt >= yearStart).Sum(t => t.Pnl ?? 0);
+        var totalSum = trades.Sum(t => t.Pnl ?? 0);
 
         return new PnlSummary(
-            await todayTask,
-            await yesterdayTask,
-            await weekTask,
-            await monthTask,
-            await yearTask,
-            await totalTask);
+            new PnlSummaryItem((decimal)todaySum, PnlSummaryType.Today),
+            new PnlSummaryItem((decimal)yesterdaySum, PnlSummaryType.Yesterday),
+            new PnlSummaryItem((decimal)weekSum, PnlSummaryType.ThisWeek),
+            new PnlSummaryItem((decimal)monthSum, PnlSummaryType.ThisMonth),
+            new PnlSummaryItem((decimal)yearSum, PnlSummaryType.ThisYear),
+            new PnlSummaryItem((decimal)totalSum, PnlSummaryType.All)
+        );
     }
 
     public async Task<int> GetOpenPositionsCount(CancellationToken ct = default)
     {
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
         return await context.Trades.CountAsync(t => t.Status == "open", ct);
     }
 
     public async Task<double> GetDailyPnl(string? quoteAsset = null, CancellationToken ct = default)
     {
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
         var today = DateTime.Today.ToUniversalTime();
         var query = context.Trades.Where(t => t.Status == "closed" && t.CloseAt >= today);
         if (!string.IsNullOrEmpty(quoteAsset))
@@ -98,6 +88,8 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
 
     public async Task<double> GetTotalPnl(string? quoteAsset = null, CancellationToken ct = default)
     {
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
         var query = context.Trades.Where(t => t.Status == "closed");
         if (!string.IsNullOrEmpty(quoteAsset))
             query = query.Where(t => t.Symbol.EndsWith(quoteAsset));
@@ -107,6 +99,8 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
 
     public async Task<Stats> GetStats(string? quoteAsset = null, CancellationToken ct = default)
     {
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
         var today = DateTime.Today.ToUniversalTime();
         var monday = DateTime.Today.AddDays(-((int)DateTime.Today.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7).ToUniversalTime();
         var month = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).ToUniversalTime();
@@ -139,6 +133,8 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
 
     public async Task<List<OpenPosition>> GetOpenPositions(CancellationToken ct = default)
     {
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
         var trades = await context.Trades
             .Where(t => t.Status == "open")
             .OrderByDescending(t => t.CreatedAt)
@@ -151,6 +147,8 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
 
     public async Task<List<ClosedTrade>> GetLastTrades(int limit = 5, CancellationToken ct = default)
     {
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
         return await context.Trades
             .Where(t => t.Status == "closed")
             .OrderByDescending(t => t.CloseAt)
@@ -163,6 +161,8 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
 
     public async Task LogTradeOpen(OpenPosition trade, CancellationToken ct = default)
     {
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
         var entity = new Trade
         {
             Symbol = trade.Symbol,
@@ -183,6 +183,8 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
 
     public async Task LogTradeClose(int tradeId, double closePrice, double pnlUsdt, double pnlPct, string reason, CancellationToken ct = default)
     {
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
         var trade = await context.Trades.FirstOrDefaultAsync(t => t.Id == tradeId, ct);
         if (trade == null || trade.Status == "closed") return;
 
@@ -197,6 +199,8 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
 
     public async Task UpdateTakeProfit(int tradeId, double takeProfit, CancellationToken ct = default)
     {
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
         var trade = await context.Trades.FirstOrDefaultAsync(t => t.Id == tradeId, ct);
         if (trade == null) return;
 
@@ -206,6 +210,8 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
 
     public async Task LogOpportunity(OpportunityData opportunity, CancellationToken ct = default)
     {
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
         var entity = new Opportunity
         {
             Symbol = opportunity.Symbol,
@@ -224,6 +230,8 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
 
     public async Task<List<OpportunityData>> GetRecentOpportunities(int hours, CancellationToken ct = default)
     {
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
         var cutoff = DateTime.UtcNow.AddHours(-hours);
         return await context.Opportunities
             .Where(o => o.CreatedAt >= cutoff)
@@ -243,6 +251,8 @@ public class DatabaseService(ITradingDbContext context) : IDatabaseService
 
     public async Task LogPortfolioSnapshot(PortfolioData portfolio, CancellationToken ct = default)
     {
+        using var scope = scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
         var entity = new PortfolioSnapshot
         {
             Free = portfolio.FreeUsdt,
