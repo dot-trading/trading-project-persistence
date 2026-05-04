@@ -6,7 +6,7 @@ using TradingProject.Persistence.Application.Abstractions;
 
 namespace TradingProject.Persistence.Application.UseCases.Opportunities.GetOpportunities;
 
-public record GetOpportunitiesQuery(int Limit = 50, string? Symbol = null, bool? IsApproved = null)
+public record GetOpportunitiesQuery(int Limit = 50, int Page = 1, string? Symbol = null, bool? IsApproved = null)
     : IQuery<List<OpportunityResponse>>;
 
 public class GetOpportunitiesQueryHandler(ITradingDbContext context, IMapper mapper)
@@ -20,6 +20,7 @@ public class GetOpportunitiesQueryHandler(ITradingDbContext context, IMapper map
 
         return await q
             .OrderByDescending(o => o.CreatedAt)
+            .Skip((query.Page - 1) * query.Limit)
             .Take(query.Limit)
             .ProjectTo<OpportunityResponse>(mapper.ConfigurationProvider)
             .ToListAsync(ct);
