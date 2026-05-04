@@ -5,8 +5,8 @@ namespace TradingProject.Persistence.Application.Abstractions;
 
 public interface IDatabaseService
 {
-    Task<PnlSummaryItem> GetPnlSummaryAsync(PnlSummaryType pnlSummaryType, CancellationToken ct = default);
-    Task<PnlSummary> GetPnlSummary(PnlSummaryType? type = null, CancellationToken ct = default);
+    Task<PnlSummaryItem> GetPnlSummaryAsync(PnlSummaryType pnlSummaryType, string? quoteAsset = null, CancellationToken ct = default);
+    Task<PnlSummary> GetPnlSummary(PnlSummaryType? type = null, string? quoteAsset = null, CancellationToken ct = default);
     Task<int> GetOpenPositionsCount(CancellationToken ct = default);
     Task<double> GetDailyPnl(string? quoteAsset = null, CancellationToken ct = default);
     Task<double> GetTotalPnl(string? quoteAsset = null, CancellationToken ct = default);
