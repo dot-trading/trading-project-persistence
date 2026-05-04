@@ -1,3 +1,5 @@
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Cortex.Mediator.Queries;
 using Microsoft.EntityFrameworkCore;
 using TradingProject.Persistence.Application.Abstractions;
@@ -7,7 +9,7 @@ namespace TradingProject.Persistence.Application.UseCases.Opportunities.GetOppor
 public record GetOpportunitiesQuery(int Limit = 50, string? Symbol = null, bool? IsApproved = null)
     : IQuery<List<OpportunityResponse>>;
 
-public class GetOpportunitiesQueryHandler(ITradingDbContext context)
+public class GetOpportunitiesQueryHandler(ITradingDbContext context, IMapper mapper)
     : IQueryHandler<GetOpportunitiesQuery, List<OpportunityResponse>>
 {
     public async Task<List<OpportunityResponse>> Handle(GetOpportunitiesQuery query, CancellationToken ct)
@@ -19,10 +21,7 @@ public class GetOpportunitiesQueryHandler(ITradingDbContext context)
         return await q
             .OrderByDescending(o => o.CreatedAt)
             .Take(query.Limit)
-            .Select(o => new OpportunityResponse(
-                o.Id, o.Symbol, o.Score, o.Signal, o.Reason,
-                o.TargetPct, o.StopLossPct, o.Price,
-                o.Acted, o.IsApproved, o.ValidationReason, o.CreatedAt))
+            .ProjectTo<OpportunityResponse>(mapper.ConfigurationProvider)
             .ToListAsync(ct);
     }
 }
