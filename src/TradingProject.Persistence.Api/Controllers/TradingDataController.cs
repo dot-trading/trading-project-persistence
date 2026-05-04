@@ -6,6 +6,7 @@ using TradingProject.Persistence.Application.Common.Models;
 
 namespace TradingProject.Persistence.Api.Controllers;
 
+[Obsolete("This controller is deprecated. Please use the specialized controllers (Trades, Opportunities, PortfolioSnapshots) instead.")]
 [ApiController]
 [Route("api/[controller]")]
 public class TradingDataController(IMediator mediator) : ControllerBase
