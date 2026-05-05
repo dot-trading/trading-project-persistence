@@ -8,7 +8,8 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddCortexMediator([typeof(DependencyInjection)]);
-        services.AddAutoMapper(typeof(DependencyInjection));
+        services.AddAutoMapper(cfg => { },
+            [typeof(DependencyInjection)]);
 
         return services;
     }

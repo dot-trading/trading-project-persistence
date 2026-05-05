@@ -1,13 +1,14 @@
-using Xunit;
 using AutoMapper;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using TradingProject.Persistence.Application.Mappings;
 using TradingProject.Persistence.Application.UseCases.Trades.CreateTrade;
 using TradingProject.Persistence.Application.UseCases.Trades.GetTrades;
 using TradingProject.Persistence.Application.UseCases.Trades.UpdateTrade;
 using TradingProject.Persistence.Domain.Entities;
 using TradingProject.Persistence.Infrastructure.Persistence;
+using Xunit;
 
 namespace TradingProject.Persistence.Application.Tests.UseCases.Trades;
 
@@ -24,9 +25,9 @@ public class TradeTests
 
         _context = new TradingDbContext(options);
 
-        var config = new MapperConfiguration(cfg => {
-            cfg.AddProfile<TradeProfile>();
-        });
+        var config = new MapperConfiguration(
+            cfg => cfg.AddProfile<TradeProfile>(),
+            NullLoggerFactory.Instance);
         _mapper = config.CreateMapper();
     }
 
@@ -56,8 +57,8 @@ public class TradeTests
         var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.Should().HaveCount(3);
-        result[0].Id.Should().Be(4);
+        result.Payload.Should().HaveCount(3);
+        result.Payload[0].Id.Should().Be(4);
     }
 
     [Fact]

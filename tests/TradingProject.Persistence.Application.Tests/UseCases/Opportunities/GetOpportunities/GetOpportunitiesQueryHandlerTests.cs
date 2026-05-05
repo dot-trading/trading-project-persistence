@@ -1,11 +1,12 @@
-using Xunit;
 using AutoMapper;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using TradingProject.Persistence.Application.Mappings;
 using TradingProject.Persistence.Application.UseCases.Opportunities.GetOpportunities;
 using TradingProject.Persistence.Domain.Entities;
 using TradingProject.Persistence.Infrastructure.Persistence;
+using Xunit;
 
 namespace TradingProject.Persistence.Application.Tests.UseCases.Opportunities.GetOpportunities;
 
@@ -23,7 +24,9 @@ public class GetOpportunitiesQueryHandlerTests
 
         _context = new TradingDbContext(options);
 
-        var config = new MapperConfiguration(cfg => cfg.AddProfile<OpportunityProfile>());
+        var config = new MapperConfiguration(
+            cfg => cfg.AddProfile<OpportunityProfile>(),
+            NullLoggerFactory.Instance);
         _mapper = config.CreateMapper();
 
         _handler = new GetOpportunitiesQueryHandler(_context, _mapper);

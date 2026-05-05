@@ -8,7 +8,7 @@ using TradingProject.Persistence.Domain.Entities;
 
 namespace TradingProject.Persistence.Infrastructure.Services;
 
-public class DatabaseService(IServiceScopeFactory scopeFactory, ILogger<DatabaseService> logger) : IDatabaseService
+public class DatabaseService(IServiceScopeFactory scopeFactory) : IDatabaseService
 {
     static DatabaseService()
     {

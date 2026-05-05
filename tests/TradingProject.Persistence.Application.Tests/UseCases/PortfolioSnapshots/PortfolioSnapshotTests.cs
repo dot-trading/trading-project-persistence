@@ -1,13 +1,13 @@
-using Xunit;
 using AutoMapper;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using TradingProject.Persistence.Application.Mappings;
-using TradingProject.Persistence.Application.UseCases.PortfolioSnapshots;
 using TradingProject.Persistence.Application.UseCases.PortfolioSnapshots.CreatePortfolioSnapshot;
 using TradingProject.Persistence.Application.UseCases.PortfolioSnapshots.GetPortfolioSnapshots;
 using TradingProject.Persistence.Domain.Entities;
 using TradingProject.Persistence.Infrastructure.Persistence;
+using Xunit;
 
 namespace TradingProject.Persistence.Application.Tests.UseCases.PortfolioSnapshots;
 
@@ -24,9 +24,9 @@ public class PortfolioSnapshotTests
 
         _context = new TradingDbContext(options);
 
-        var config = new MapperConfiguration(cfg => {
-            cfg.AddProfile<PortfolioSnapshotProfile>();
-        });
+        var config = new MapperConfiguration(
+            cfg => cfg.AddProfile<PortfolioSnapshotProfile>(),
+            NullLoggerFactory.Instance);
         _mapper = config.CreateMapper();
     }
 
