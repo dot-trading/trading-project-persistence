@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using TradingProject.Persistence.Application.Queries;
 using TradingProject.Persistence.Application.Commands;
 using TradingProject.Persistence.Application.Common.Models;
+using TradingProject.Persistence.Application.UseCases.Opportunities.CreateOpportunity;
 
 namespace TradingProject.Persistence.Api.Controllers;
 
@@ -39,10 +40,6 @@ public class TradingDataController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> GetLastTrades(CancellationToken ct, [FromQuery] int limit = 5)
         => Ok(await mediator.SendQueryAsync(new GetLastTradesQuery(limit), ct));
 
-    [HttpGet("opportunities/recent")]
-    public async Task<IActionResult> GetRecentOpportunities(CancellationToken ct, [FromQuery] int hours = 1)
-        => Ok(await mediator.SendQueryAsync(new GetRecentOpportunitiesQuery(hours), ct));
-
     [HttpPost("trades/open")]
     public async Task<IActionResult> LogTradeOpen([FromBody] OpenPosition trade, CancellationToken ct)
     {
@@ -67,7 +64,12 @@ public class TradingDataController(IMediator mediator) : ControllerBase
     [HttpPost("opportunities")]
     public async Task<IActionResult> LogOpportunity([FromBody] OpportunityData opportunity, CancellationToken ct)
     {
-        await mediator.SendCommandAsync(new LogOpportunityCommand(opportunity), ct);
+        await mediator.SendCommandAsync(
+            new CreateOpportunityCommand(
+                new CreateOpportunityRequest(
+                    opportunity.Symbol, opportunity.Score, opportunity.Signal, opportunity.Reason, opportunity.Price,
+                    TargetPct: null, StopLossPct: null,
+                    opportunity.IsApproved, opportunity.ValidationReason = null)), ct);
         return Ok();
     }
 
