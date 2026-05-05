@@ -17,5 +17,4 @@ public interface IDatabaseService
     Task UpdateTakeProfit(int tradeId, double takeProfit, CancellationToken ct = default);
     Task LogOpportunity(OpportunityData opportunity, CancellationToken ct = default);
     Task<List<OpportunityData>> GetRecentOpportunities(int hours, CancellationToken ct = default);
-    Task LogPortfolioSnapshot(PortfolioData portfolio, CancellationToken ct = default);
 }

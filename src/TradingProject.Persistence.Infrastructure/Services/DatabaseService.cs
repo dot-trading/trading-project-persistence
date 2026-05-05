@@ -226,20 +226,4 @@ public class DatabaseService(IServiceScopeFactory scopeFactory) : IDatabaseServi
             })
             .ToListAsync(ct);
     }
-
-    public async Task LogPortfolioSnapshot(PortfolioData portfolio, CancellationToken ct = default)
-    {
-        using var scope = scopeFactory.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
-        var entity = new PortfolioSnapshot
-        {
-            Free = portfolio.FreeUsdt,
-            Total = portfolio.TotalUsdt,
-            PositionsCount = portfolio.OpenPositions?.Count ?? 0,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        context.PortfolioSnapshots.Add(entity);
-        await context.SaveChangesAsync(ct);
-    }
 }
