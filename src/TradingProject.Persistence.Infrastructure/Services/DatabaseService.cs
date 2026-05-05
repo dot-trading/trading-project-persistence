@@ -205,25 +205,4 @@ public class DatabaseService(IServiceScopeFactory scopeFactory) : IDatabaseServi
         context.Opportunities.Add(entity);
         await context.SaveChangesAsync(ct);
     }
-
-    public async Task<List<OpportunityData>> GetRecentOpportunities(int hours, CancellationToken ct = default)
-    {
-        using var scope = scopeFactory.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
-        var cutoff = DateTime.UtcNow.AddHours(-hours);
-        return await context.Opportunities
-            .Where(o => o.CreatedAt >= cutoff)
-            .OrderByDescending(o => o.CreatedAt)
-            .Select(o => new OpportunityData
-            {
-                Symbol = o.Symbol,
-                Score = o.Score,
-                Signal = o.Signal,
-                Reason = o.Reason,
-                Price = o.Price,
-                IsApproved = o.IsApproved,
-                ValidationReason = o.ValidationReason
-            })
-            .ToListAsync(ct);
-    }
 }
