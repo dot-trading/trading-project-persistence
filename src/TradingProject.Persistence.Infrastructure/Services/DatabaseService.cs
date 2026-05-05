@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using TradingProject.Persistence.Application.Abstractions;
 using TradingProject.Persistence.Application.Common.Enums;
 using TradingProject.Persistence.Application.Common.Models;
@@ -67,13 +66,6 @@ public class DatabaseService(IServiceScopeFactory scopeFactory) : IDatabaseServi
         );
     }
 
-    public async Task<int> GetOpenPositionsCount(CancellationToken ct = default)
-    {
-        using var scope = scopeFactory.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
-        return await context.Trades.CountAsync(t => t.Status == "open", ct);
-    }
-
     public async Task<double> GetDailyPnl(string? quoteAsset = null, CancellationToken ct = default)
     {
         using var scope = scopeFactory.CreateScope();
@@ -129,20 +121,6 @@ public class DatabaseService(IServiceScopeFactory scopeFactory) : IDatabaseServi
             statsTotal.Count,
             wins,
             statsTotal.Count > 0 ? wins * 100.0 / statsTotal.Count : 0);
-    }
-
-    public async Task<List<OpenPosition>> GetOpenPositions(CancellationToken ct = default)
-    {
-        using var scope = scopeFactory.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
-        var trades = await context.Trades
-            .Where(t => t.Status == "open")
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync(ct);
-
-        return trades.Select(t => new OpenPosition(
-            t.Id, t.Symbol, t.Side, t.Price, t.Quantity, t.Value,
-            t.StopLoss, t.TakeProfit, t.AiScore, t.CreatedAt)).ToList();
     }
 
     public async Task<List<ClosedTrade>> GetLastTrades(int limit = 5, CancellationToken ct = default)
