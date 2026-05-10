@@ -10,8 +10,5 @@
     <Project Path="tests/TradingProject.Persistence.Application.Tests/TradingProject.Persistence.Application.Tests.csproj" />
     <Project Path="tests/TradingProject.Persistence.IntegrationTests/TradingProject.Persistence.IntegrationTests.csproj" />
   </Folder>
-  <Folder Name="/trading-project-persistence/" />
-  <Folder Name="/trading-project-persistence/tests/">
-    <Project Path="trading-project-persistence/tests/TradingProject.Persistence.Application.Tests/TradingProject.Persistence.Application.Tests.csproj" />
-  </Folder>
+
 </Solution>
