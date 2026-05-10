@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Cortex.Mediator;
 using Microsoft.AspNetCore.Mvc;
 using TradingProject.Persistence.Application.Queries;
@@ -5,11 +6,12 @@ using TradingProject.Persistence.Application.Commands;
 using TradingProject.Persistence.Application.Common.Models;
 using TradingProject.Persistence.Application.UseCases.Opportunities.CreateOpportunity;
 
-namespace TradingProject.Persistence.Api.Controllers;
+namespace TradingProject.Persistence.Api.Controllers.V1;
 
 [Obsolete("This controller is deprecated. Please use the specialized controllers (Trades, Opportunities, PortfolioSnapshots) instead.")]
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/tradingdata")]
 public class TradingDataController(IMediator mediator) : ControllerBase
 {
     [HttpGet("positions/open/count")]

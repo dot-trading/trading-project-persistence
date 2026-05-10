@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Cortex.Mediator;
 using Microsoft.AspNetCore.Mvc;
 using TradingProject.Persistence.Application.UseCases.Trades;
@@ -5,9 +6,11 @@ using TradingProject.Persistence.Application.UseCases.Trades.CreateTrade;
 using TradingProject.Persistence.Application.UseCases.Trades.GetTrades;
 using TradingProject.Persistence.Application.UseCases.Trades.UpdateTrade;
 
-namespace TradingProject.Persistence.Api.Controllers;
+namespace TradingProject.Persistence.Api.Controllers.V0;
 
 [ApiController]
+[ApiVersion("0.0")]
+[Route("api/v{version:apiVersion}/trades")]
 [Route("api/trades")]
 public class TradesController(IMediator mediator) : ControllerBase
 {

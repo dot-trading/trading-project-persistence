@@ -1,12 +1,15 @@
+using Asp.Versioning;
 using Cortex.Mediator;
 using Microsoft.AspNetCore.Mvc;
 using TradingProject.Persistence.Application.UseCases.Opportunities;
 using TradingProject.Persistence.Application.UseCases.Opportunities.CreateOpportunity;
 using TradingProject.Persistence.Application.UseCases.Opportunities.GetOpportunities;
 
-namespace TradingProject.Persistence.Api.Controllers;
+namespace TradingProject.Persistence.Api.Controllers.V0;
 
 [ApiController]
+[ApiVersion("0.0")]
+[Route("api/v{version:apiVersion}/opportunities")]
 [Route("api/opportunities")]
 public class OpportunitiesController(IMediator mediator) : ControllerBase
 {
