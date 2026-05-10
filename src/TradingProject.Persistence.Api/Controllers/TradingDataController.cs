@@ -69,7 +69,7 @@ public class TradingDataController(IMediator mediator) : ControllerBase
                 new CreateOpportunityRequest(
                     opportunity.Symbol, opportunity.Score, opportunity.Signal, opportunity.Reason, opportunity.Price,
                     TargetPct: null, StopLossPct: null,
-                    opportunity.IsApproved, opportunity.ValidationReason = null)), ct);
+                    opportunity.IsApproved, opportunity.ValidationReason)), ct);
         return Ok();
     }
 
