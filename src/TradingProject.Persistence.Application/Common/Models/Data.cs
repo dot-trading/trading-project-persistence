@@ -41,10 +41,16 @@ public class PortfolioData
 {
     [JsonPropertyName("freeUsdt")]
     public double FreeUsdt { get; set; }
-    
+
     [JsonPropertyName("totalUsdt")]
     public double TotalUsdt { get; set; }
-    
+
+    [JsonPropertyName("dailyPnl")]
+    public double DailyPnl { get; set; }
+
+    [JsonPropertyName("totalPnl")]
+    public double TotalPnl { get; set; }
+
     [JsonPropertyName("openPositions")]
     public List<PortfolioPositionData> OpenPositions { get; set; } = new();
 }

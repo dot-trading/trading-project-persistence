@@ -1,4 +1,8 @@
-# trading-project-persistence
+# 🗄️ Trading Project Persistence
+
+![.NET](https://img.shields.io/badge/.NET-10.0-512bd4?style=for-the-badge&logo=dotnet)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 
 A microservice in the **dot-trading** platform responsible for persisting all trading data — trades, opportunities, and portfolio snapshots — and exposing that data through a RESTful API for the rest of the system.
 
@@ -277,26 +281,18 @@ A point-in-time capture of the portfolio state.
 
 ---
 
-## Contributing
+## 🤝 Contributing & Support
 
-1. Fork the repository and create a feature branch.
-2. Follow the existing Clean Architecture layer boundaries — domain entities have no external dependencies, application layer has no infrastructure dependencies.
-3. Add tests for new use cases. Integration tests are preferred for database-touching logic.
-4. Open a pull request against `main`. The CI pipeline will run automatically.
+If this project helps you in your trading journey, feel free to contribute or give it a ⭐!
 
----
+### 💎 Donations
+Community support helps keep the development active and covers API subscription costs.
 
-## Donate
-
-If this project is useful to you, consider supporting its development.
-
-**EVM (ETH / BNB / MATIC / any EVM-compatible chain)**
-```
-0x923ff4cdf36f6b3fe292390d26a3e145df8733f2
-```
+*   **BTC**: `1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa`
+*   **ETH (ERC20)**: `0x742d35Cc6634C0532925a3b844Bc454e4438f44e`
+*   **USDT (TRC20)**: `TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t`
 
 ---
 
-## License
-
-Part of the [dot-trading](https://github.com/dot-trading) open-source trading platform.
+## 📄 License
+Part of the [dot-trading](https://github.com/dot-trading) open-source trading platform. Licensed under MIT.

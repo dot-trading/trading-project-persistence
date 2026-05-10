@@ -44,6 +44,8 @@ public class CommandHandlers(IDatabaseService db, ITradingDbContext context) :
         {
             Free = command.Portfolio.FreeUsdt,
             Total = command.Portfolio.TotalUsdt,
+            DailyPnl = command.Portfolio.DailyPnl,
+            TotalPnl = command.Portfolio.TotalPnl,
             PositionsCount = command.Portfolio.OpenPositions?.Count ?? 0,
             CreatedAt = DateTime.UtcNow
         };
