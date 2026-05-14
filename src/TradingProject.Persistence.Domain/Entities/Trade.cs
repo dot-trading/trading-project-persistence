@@ -14,6 +14,7 @@ public class Trade
     public double? TakeProfit { get; set; }
     public int? AiScore { get; set; }
     public double? ClosePrice { get; set; }
+    public string? BinanceOrderId { get; set; }
     public double? Pnl { get; set; }
     public double? PnlPct { get; set; }
     public DateTime CreatedAt { get; set; }

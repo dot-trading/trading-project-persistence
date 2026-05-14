@@ -7,7 +7,8 @@ namespace TradingProject.Persistence.Application.UseCases.Trades.UpdateTrade;
 
 public record UpdateTradeRequest(
     string? Status = null, double? ClosePrice = null, double? Pnl = null, double? PnlPct = null,
-    double? TakeProfit = null, double? StopLoss = null);
+    double? TakeProfit = null, double? StopLoss = null,
+    string? BinanceOrderId = null);
 
 public record UpdateTradeCommand(int Id, UpdateTradeRequest Updates) : ICommand<TradeResponse?>;
 

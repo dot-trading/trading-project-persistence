@@ -22,6 +22,7 @@ public class TradeEntityConfiguration : IEntityTypeConfiguration<Trade>
         entity.Property(t => t.StopLoss).HasColumnName("stop_loss");
         entity.Property(t => t.TakeProfit).HasColumnName("take_profit");
         entity.Property(t => t.AiScore).HasColumnName("ai_score");
+        entity.Property(t => t.BinanceOrderId).HasColumnName("binance_order_id");
         entity.Property(t => t.ClosePrice).HasColumnName("close_price");
         entity.Property(t => t.Pnl).HasColumnName("pnl");
         entity.Property(t => t.PnlPct).HasColumnName("pnl_pct");
