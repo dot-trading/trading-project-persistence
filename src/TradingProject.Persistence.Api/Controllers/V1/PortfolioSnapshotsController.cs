@@ -1,13 +1,15 @@
+using Asp.Versioning;
 using Cortex.Mediator;
 using Microsoft.AspNetCore.Mvc;
 using TradingProject.Persistence.Application.UseCases.PortfolioSnapshots;
 using TradingProject.Persistence.Application.UseCases.PortfolioSnapshots.CreatePortfolioSnapshot;
 using TradingProject.Persistence.Application.UseCases.PortfolioSnapshots.GetPortfolioSnapshots;
 
-namespace TradingProject.Persistence.Api.Controllers;
+namespace TradingProject.Persistence.Api.Controllers.V1;
 
 [ApiController]
-[Route("api/portfolio-snapshots")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/portfolio-snapshots")]
 public class PortfolioSnapshotsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

@@ -6,7 +6,7 @@ using TradingProject.Persistence.Domain.Entities;
 namespace TradingProject.Persistence.Application.Commands;
 
 public record LogTradeOpenCommand(OpenPosition Trade) : ICommand;
-public record LogTradeCloseCommand(int TradeId, double ClosePrice, double PnlUsdt, double PnlPct, string Reason) : ICommand;
+public record LogTradeCloseCommand(int TradeId, double ClosePrice, double Pnl, double PnlPct, string Reason) : ICommand;
 public record UpdateTakeProfitCommand(int TradeId, double TakeProfit) : ICommand;
 public record LogOpportunityCommand(OpportunityData Opportunity) : ICommand;
 public record LogPortfolioSnapshotCommand(PortfolioData Portfolio) : ICommand;
@@ -25,7 +25,7 @@ public class CommandHandlers(IDatabaseService db, ITradingDbContext context) :
 
     public async Task Handle(LogTradeCloseCommand command, CancellationToken ct)
     {
-        await db.LogTradeClose(command.TradeId, command.ClosePrice, command.PnlUsdt, command.PnlPct, command.Reason, ct);
+        await db.LogTradeClose(command.TradeId, command.ClosePrice, command.Pnl, command.PnlPct, command.Reason, ct);
     }
 
     public async Task Handle(UpdateTakeProfitCommand command, CancellationToken ct)
@@ -42,8 +42,10 @@ public class CommandHandlers(IDatabaseService db, ITradingDbContext context) :
     {
         var entity = new PortfolioSnapshot
         {
-            Free = command.Portfolio.FreeUsdt,
-            Total = command.Portfolio.TotalUsdt,
+            Free = command.Portfolio.Free,
+            Total = command.Portfolio.Total,
+            DailyPnl = command.Portfolio.DailyPnl,
+            TotalPnl = command.Portfolio.TotalPnl,
             PositionsCount = command.Portfolio.OpenPositions?.Count ?? 0,
             CreatedAt = DateTime.UtcNow
         };

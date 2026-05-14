@@ -4,6 +4,7 @@ public class Trade
 {
     public int Id { get; set; }
     public string Symbol { get; set; } = string.Empty;
+    public string QuoteAsset { get; set; } = string.Empty;
     public string Side { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public double Price { get; set; }
@@ -13,6 +14,7 @@ public class Trade
     public double? TakeProfit { get; set; }
     public int? AiScore { get; set; }
     public double? ClosePrice { get; set; }
+    public string? BinanceOrderId { get; set; }
     public double? Pnl { get; set; }
     public double? PnlPct { get; set; }
     public DateTime CreatedAt { get; set; }

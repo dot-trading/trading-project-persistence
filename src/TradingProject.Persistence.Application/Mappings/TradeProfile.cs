@@ -1,4 +1,5 @@
 using AutoMapper;
+using TradingProject.Persistence.Application.Common;
 using TradingProject.Persistence.Application.Common.Models;
 using TradingProject.Persistence.Application.UseCases.Trades;
 using TradingProject.Persistence.Application.UseCases.Trades.CreateTrade;
@@ -15,10 +16,11 @@ public class TradeProfile : Profile
 
         CreateMap<Trade, OpenPosition>()
             .ForCtorParam("Entry", opt => opt.MapFrom(src => src.Price))
-            .ForCtorParam("UsdtValue", opt => opt.MapFrom(src => src.Value));
+            .ForCtorParam("Value", opt => opt.MapFrom(src => src.Value));
         
         CreateMap<CreateTradeRequest, Trade>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.QuoteAsset, opt => opt.MapFrom(src => SymbolHelper.ExtractQuoteAsset(src.Symbol)))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(_ => "open"))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
             .ForMember(dest => dest.CloseAt, opt => opt.Ignore())

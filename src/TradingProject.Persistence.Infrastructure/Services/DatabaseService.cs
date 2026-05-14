@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TradingProject.Persistence.Application.Abstractions;
 using TradingProject.Persistence.Application.Common.Enums;
+using TradingProject.Persistence.Application.Common;
 using TradingProject.Persistence.Application.Common.Models;
 using TradingProject.Persistence.Domain.Entities;
 
@@ -144,11 +145,12 @@ public class DatabaseService(IServiceScopeFactory scopeFactory) : IDatabaseServi
         var entity = new Trade
         {
             Symbol = trade.Symbol,
+            QuoteAsset = SymbolHelper.ExtractQuoteAsset(trade.Symbol),
             Side = trade.Side,
             Status = "open",
             Price = trade.Entry,
             Quantity = trade.Quantity,
-            Value = trade.UsdtValue,
+            Value = trade.Value,
             StopLoss = trade.StopLoss,
             TakeProfit = trade.TakeProfit,
             AiScore = trade.AiScore,
@@ -159,7 +161,7 @@ public class DatabaseService(IServiceScopeFactory scopeFactory) : IDatabaseServi
         await context.SaveChangesAsync(ct);
     }
 
-    public async Task LogTradeClose(int tradeId, double closePrice, double pnlUsdt, double pnlPct, string reason, CancellationToken ct = default)
+    public async Task LogTradeClose(int tradeId, double closePrice, double pnl, double pnlPct, string reason, CancellationToken ct = default)
     {
         using var scope = scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
@@ -168,7 +170,7 @@ public class DatabaseService(IServiceScopeFactory scopeFactory) : IDatabaseServi
 
         trade.Status = "closed";
         trade.ClosePrice = closePrice;
-        trade.Pnl = pnlUsdt;
+        trade.Pnl = pnl;
         trade.PnlPct = pnlPct;
         trade.CloseAt = DateTime.UtcNow;
 

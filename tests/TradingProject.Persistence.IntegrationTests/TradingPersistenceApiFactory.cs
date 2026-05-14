@@ -9,8 +9,7 @@ namespace TradingProject.Persistence.IntegrationTests;
 
 public class TradingPersistenceApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:15-alpine")
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:15-alpine")
         .WithDatabase("trading")
         .WithUsername("trading")
         .WithPassword("trading_secure_pwd_2026")
@@ -33,10 +32,7 @@ public class TradingPersistenceApiFactory : WebApplicationFactory<Program>, IAsy
                 options.UseNpgsql(_dbContainer.GetConnectionString());
             });
 
-            var sp = services.BuildServiceProvider();
-            using var scope = sp.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<TradingDbContext>();
-            db.Database.EnsureCreated();
+            // Schema setup is handled by MigrateAsync in Program.cs
         });
     }
 

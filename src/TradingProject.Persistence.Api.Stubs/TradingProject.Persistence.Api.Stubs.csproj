@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>TradingProject.Persistence.Api.Stubs</RootNamespace>
+    <AssemblyName>TradingProject.Persistence.Api.Stubs</AssemblyName>
+    <Description>Stub library for V1 API of TradingProject.Persistence. Provides contracts and stub implementations for other services.</Description>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- System.Text.Json is included in the .NET SDK -->
+
+</Project>

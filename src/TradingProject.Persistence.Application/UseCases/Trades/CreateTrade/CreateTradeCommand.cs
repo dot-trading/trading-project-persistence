@@ -8,7 +8,8 @@ namespace TradingProject.Persistence.Application.UseCases.Trades.CreateTrade;
 public record CreateTradeRequest(
     string Symbol, string Side,
     double Price, double Quantity, double Value,
-    double? StopLoss = null, double? TakeProfit = null, int? AiScore = null);
+    double? StopLoss = null, double? TakeProfit = null, int? AiScore = null,
+    string? BinanceOrderId = null);
 
 public record CreateTradeCommand(CreateTradeRequest Trade) : ICommand<TradeResponse>;
 
@@ -18,7 +19,7 @@ public class CreateTradeCommandHandler(ITradingDbContext context, IMapper mapper
     public async Task<TradeResponse> Handle(CreateTradeCommand command, CancellationToken ct)
     {
         var entity = mapper.Map<Trade>(command.Trade);
-        
+
         context.Trades.Add(entity);
         await context.SaveChangesAsync(ct);
 

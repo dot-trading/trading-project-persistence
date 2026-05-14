@@ -40,11 +40,17 @@ public class OpportunityData
 public class PortfolioData
 {
     [JsonPropertyName("freeUsdt")]
-    public double FreeUsdt { get; set; }
-    
+    public double Free { get; set; }
+
     [JsonPropertyName("totalUsdt")]
-    public double TotalUsdt { get; set; }
-    
+    public double Total { get; set; }
+
+    [JsonPropertyName("dailyPnl")]
+    public double DailyPnl { get; set; }
+
+    [JsonPropertyName("totalPnl")]
+    public double TotalPnl { get; set; }
+
     [JsonPropertyName("openPositions")]
     public List<PortfolioPositionData> OpenPositions { get; set; } = new();
 }
@@ -53,9 +59,9 @@ public class PortfolioPositionData
 {
     [JsonPropertyName("symbol")]
     public string Symbol { get; set; } = string.Empty;
-    
+
     [JsonPropertyName("usdtValue")]
-    public double UsdtValue { get; set; }
+    public double Value { get; set; }
 }
 
 public record Stats(
@@ -68,7 +74,8 @@ public record Stats(
 public record OpenPosition(
     int Id,
     string Symbol, string Side,
-    double Entry, double Quantity, double UsdtValue,
+    double Entry, double Quantity,
+    [property: JsonPropertyName("usdtValue")] double Value,
     double? StopLoss, double? TakeProfit, int? AiScore,
     DateTime CreatedAt);
 
