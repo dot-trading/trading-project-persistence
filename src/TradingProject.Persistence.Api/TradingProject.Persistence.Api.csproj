@@ -18,6 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\TradingProject.Persistence.Application\TradingProject.Persistence.Application.csproj" />
     <ProjectReference Include="..\TradingProject.Persistence.Infrastructure\TradingProject.Persistence.Infrastructure.csproj" />
   </ItemGroup>

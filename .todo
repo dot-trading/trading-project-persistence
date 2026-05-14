@@ -1,5 +1,0 @@
-- [x] rename columns that contains spot name, example total_usdt become total.
-- [x] remove V1 TradingDataController
-- [x] add BinanceOrderId to V1 TradesController
-- [x] create V1 stub library project (TradingProject.Persistence.Api.Stubs)
-- [x] add stub library unit tests
