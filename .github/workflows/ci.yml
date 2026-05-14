@@ -76,6 +76,38 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+  publish-nuget:
+    name: Publish Stub Library to GitHub Packages
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    env:
+      NUGET_PROJECT: src/TradingProject.Persistence.Api.Stubs/TradingProject.Persistence.Api.Stubs.csproj
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Compute version
+        id: version
+        run: echo "suffix=-ci-$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Pack NuGet package
+        run: dotnet pack ${{ env.NUGET_PROJECT }} -c Release -o ./nupkg /p:VersionSuffix=${{ steps.version.outputs.suffix }}
+
+      - name: Push to GitHub Packages
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg \
+            --source https://nuget.pkg.github.com/dot-trading/index.json \
+            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --skip-duplicate
+
   deploy:
     name: Deploy to Kubernetes
     runs-on: ubuntu-latest
