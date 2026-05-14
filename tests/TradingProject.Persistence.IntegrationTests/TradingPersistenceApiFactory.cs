@@ -9,8 +9,7 @@ namespace TradingProject.Persistence.IntegrationTests;
 
 public class TradingPersistenceApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:15-alpine")
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:15-alpine")
         .WithDatabase("trading")
         .WithUsername("trading")
         .WithPassword("trading_secure_pwd_2026")

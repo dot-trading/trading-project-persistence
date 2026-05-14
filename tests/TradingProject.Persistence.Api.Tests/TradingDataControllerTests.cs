@@ -3,10 +3,11 @@ using Cortex.Mediator.Queries;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using TradingProject.Persistence.Api.Controllers;
+using TradingProject.Persistence.Api.Controllers.V1;
 
 namespace TradingProject.Persistence.Api.Tests;
 
+#pragma warning disable CS0618
 public class TradingDataControllerTests
 {
     private readonly Mock<IMediator> _mediatorMock;
