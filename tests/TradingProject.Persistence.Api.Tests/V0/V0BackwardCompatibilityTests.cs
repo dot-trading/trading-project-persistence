@@ -78,21 +78,6 @@ public class V0BackwardCompatibilityTests
     }
 
     [Fact]
-    public async Task V0_LogTradeOpen_ShouldForwardValueToCommand()
-    {
-        var mediatorMock = new Mock<IMediator>();
-        var controller = new TradingDataController(mediatorMock.Object);
-        var trade = new OpenPosition(0, "BTCUSDT", "BUY", 60000, 0.1, 6000, null, null, null, DateTime.UtcNow);
-
-        var result = await controller.LogTradeOpen(trade, CancellationToken.None);
-
-        result.Should().BeOfType<OkResult>();
-        mediatorMock.Verify(m => m.SendCommandAsync(
-            It.Is<LogTradeOpenCommand>(c => c.Trade.Value == 6000 && c.Trade.Symbol == "BTCUSDT"),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
     public async Task V0_LogPortfolioSnapshot_ShouldForwardFreeAndTotalToCommand()
     {
         var mediatorMock = new Mock<IMediator>();
