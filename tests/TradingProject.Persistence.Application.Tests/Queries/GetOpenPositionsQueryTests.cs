@@ -101,7 +101,7 @@ public class GetOpenPositionsQueryTests
         position.Side.Should().Be("BUY");
         position.Entry.Should().Be(60000);
         position.Quantity.Should().Be(0.1);
-        position.UsdtValue.Should().Be(6000);
+        position.Value.Should().Be(6000);
         position.StopLoss.Should().Be(58000);
         position.TakeProfit.Should().Be(65000);
         position.AiScore.Should().Be(85);

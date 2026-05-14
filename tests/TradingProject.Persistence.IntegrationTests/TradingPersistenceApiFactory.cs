@@ -32,10 +32,7 @@ public class TradingPersistenceApiFactory : WebApplicationFactory<Program>, IAsy
                 options.UseNpgsql(_dbContainer.GetConnectionString());
             });
 
-            var sp = services.BuildServiceProvider();
-            using var scope = sp.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<TradingDbContext>();
-            db.Database.EnsureCreated();
+            // Schema setup is handled by MigrateAsync in Program.cs
         });
     }
 
