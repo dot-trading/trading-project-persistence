@@ -8,7 +8,7 @@
     <AssemblyName>TradingProject.Persistence.Api.Stubs</AssemblyName>
     <Description>Stub library for V1 API of TradingProject.Persistence. Provides contracts and stub implementations for other services.</Description>
     <PackageId>TradingProject.Persistence.Api.Stubs</PackageId>
-    <Version>1.0.0$(VersionSuffix)</Version>
+    <Version>1.0.0</Version>
     <Authors>dot-trading</Authors>
     <Company>dot-trading</Company>
     <RepositoryUrl>https://github.com/dot-trading/trading-project-persistence</RepositoryUrl>
