@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TradingProject.Persistence.Application.Abstractions;
 using TradingProject.Persistence.Application.Common.Enums;
+using TradingProject.Persistence.Application.Common;
 using TradingProject.Persistence.Application.Common.Models;
 using TradingProject.Persistence.Domain.Entities;
 
@@ -144,6 +145,7 @@ public class DatabaseService(IServiceScopeFactory scopeFactory) : IDatabaseServi
         var entity = new Trade
         {
             Symbol = trade.Symbol,
+            QuoteAsset = SymbolHelper.ExtractQuoteAsset(trade.Symbol),
             Side = trade.Side,
             Status = "open",
             Price = trade.Entry,

@@ -13,6 +13,7 @@ public class TradeEntityConfiguration : IEntityTypeConfiguration<Trade>
 
         entity.Property(t => t.Id).HasColumnName("id");
         entity.Property(t => t.Symbol).HasColumnName("symbol").IsRequired();
+        entity.Property(t => t.QuoteAsset).HasColumnName("quote_asset").IsRequired();
         entity.Property(t => t.Side).HasColumnName("side").IsRequired();
         entity.Property(t => t.Status).HasColumnName("status").IsRequired();
         entity.Property(t => t.Price).HasColumnName("price");
