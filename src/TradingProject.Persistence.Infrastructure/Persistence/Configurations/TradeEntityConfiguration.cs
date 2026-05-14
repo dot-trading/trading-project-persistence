@@ -22,7 +22,7 @@ public class TradeEntityConfiguration : IEntityTypeConfiguration<Trade>
         entity.Property(t => t.TakeProfit).HasColumnName("take_profit");
         entity.Property(t => t.AiScore).HasColumnName("ai_score");
         entity.Property(t => t.ClosePrice).HasColumnName("close_price");
-        entity.Property(t => t.Pnl).HasColumnName("pnl_usdt");
+        entity.Property(t => t.Pnl).HasColumnName("pnl");
         entity.Property(t => t.PnlPct).HasColumnName("pnl_pct");
         entity.Property(t => t.CreatedAt).HasColumnName("created_at");
         entity.Property(t => t.CloseAt).HasColumnName("close_at");
