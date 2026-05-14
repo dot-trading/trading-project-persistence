@@ -15,7 +15,7 @@ public class TradeProfile : Profile
 
         CreateMap<Trade, OpenPosition>()
             .ForCtorParam("Entry", opt => opt.MapFrom(src => src.Price))
-            .ForCtorParam("UsdtValue", opt => opt.MapFrom(src => src.Value));
+            .ForCtorParam("Value", opt => opt.MapFrom(src => src.Value));
         
         CreateMap<CreateTradeRequest, Trade>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())

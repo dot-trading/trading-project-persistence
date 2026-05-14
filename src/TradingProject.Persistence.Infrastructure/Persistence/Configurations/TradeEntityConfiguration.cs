@@ -17,7 +17,7 @@ public class TradeEntityConfiguration : IEntityTypeConfiguration<Trade>
         entity.Property(t => t.Status).HasColumnName("status").IsRequired();
         entity.Property(t => t.Price).HasColumnName("price");
         entity.Property(t => t.Quantity).HasColumnName("quantity");
-        entity.Property(t => t.Value).HasColumnName("usdt_value");
+        entity.Property(t => t.Value).HasColumnName("value");
         entity.Property(t => t.StopLoss).HasColumnName("stop_loss");
         entity.Property(t => t.TakeProfit).HasColumnName("take_profit");
         entity.Property(t => t.AiScore).HasColumnName("ai_score");

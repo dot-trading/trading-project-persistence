@@ -24,6 +24,11 @@ namespace TradingProject.Persistence.Infrastructure.Migrations
                 name: "pnl_usdt",
                 table: "trades",
                 newName: "pnl");
+
+            migrationBuilder.RenameColumn(
+                name: "usdt_value",
+                table: "trades",
+                newName: "value");
         }
 
         /// <inheritdoc />
@@ -43,6 +48,11 @@ namespace TradingProject.Persistence.Infrastructure.Migrations
                 name: "pnl",
                 table: "trades",
                 newName: "pnl_usdt");
+
+            migrationBuilder.RenameColumn(
+                name: "value",
+                table: "trades",
+                newName: "usdt_value");
         }
     }
 }

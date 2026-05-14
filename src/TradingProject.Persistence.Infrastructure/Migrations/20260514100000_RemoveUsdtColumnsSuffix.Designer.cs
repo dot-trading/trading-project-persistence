@@ -190,7 +190,7 @@ namespace TradingProject.Persistence.Infrastructure.Migrations
 
                     b.Property<double>("Value")
                         .HasColumnType("double precision")
-                        .HasColumnName("usdt_value");
+                        .HasColumnName("value");
 
                     b.HasKey("Id");
 

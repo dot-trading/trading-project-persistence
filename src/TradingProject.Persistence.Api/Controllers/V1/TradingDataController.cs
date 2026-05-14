@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Cortex.Mediator;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 using TradingProject.Persistence.Application.Queries;
 using TradingProject.Persistence.Application.Commands;
 using TradingProject.Persistence.Application.Common.Models;
@@ -36,15 +37,19 @@ public class TradingDataController(IMediator mediator) : ControllerBase
 
     [HttpGet("positions/open")]
     public async Task<IActionResult> GetOpenPositions(CancellationToken ct)
-        => Ok(await mediator.SendQueryAsync(new GetOpenPositionsQuery(), ct));
+    {
+        var positions = await mediator.SendQueryAsync(new GetOpenPositionsQuery(), ct);
+        return Ok(positions.Select(p => new OpenPositionResponse(p.Id, p.Symbol, p.Side, p.Entry, p.Quantity, p.Value, p.StopLoss, p.TakeProfit, p.AiScore, p.CreatedAt)));
+    }
 
     [HttpGet("trades/last")]
     public async Task<IActionResult> GetLastTrades(CancellationToken ct, [FromQuery] int limit = 5)
         => Ok(await mediator.SendQueryAsync(new GetLastTradesQuery(limit), ct));
 
     [HttpPost("trades/open")]
-    public async Task<IActionResult> LogTradeOpen([FromBody] OpenPosition trade, CancellationToken ct)
+    public async Task<IActionResult> LogTradeOpen([FromBody] LogTradeOpenRequest req, CancellationToken ct)
     {
+        var trade = new OpenPosition(req.Id, req.Symbol, req.Side, req.Entry, req.Quantity, req.Value, req.StopLoss, req.TakeProfit, req.AiScore, req.CreatedAt);
         await mediator.SendCommandAsync(new LogTradeOpenCommand(trade), ct);
         return Ok();
     }
@@ -52,7 +57,7 @@ public class TradingDataController(IMediator mediator) : ControllerBase
     [HttpPost("trades/close")]
     public async Task<IActionResult> LogTradeClose([FromBody] LogTradeCloseRequest req, CancellationToken ct)
     {
-        await mediator.SendCommandAsync(new LogTradeCloseCommand(req.TradeId, req.ClosePrice, req.PnlUsdt, req.PnlPct, req.Reason), ct);
+        await mediator.SendCommandAsync(new LogTradeCloseCommand(req.TradeId, req.ClosePrice, req.Pnl, req.PnlPct, req.Reason), ct);
         return Ok();
     }
 
@@ -76,12 +81,51 @@ public class TradingDataController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost("portfolio/snapshot")]
-    public async Task<IActionResult> LogPortfolioSnapshot([FromBody] PortfolioData portfolio, CancellationToken ct)
+    public async Task<IActionResult> LogPortfolioSnapshot([FromBody] PortfolioSnapshotRequest req, CancellationToken ct)
     {
+        var portfolio = new PortfolioData
+        {
+            Free = req.Free,
+            Total = req.Total,
+            DailyPnl = req.DailyPnl,
+            TotalPnl = req.TotalPnl,
+            OpenPositions = req.OpenPositions
+                .Select(p => new PortfolioPositionData { Symbol = p.Symbol, Value = p.Value })
+                .ToList()
+        };
         await mediator.SendCommandAsync(new LogPortfolioSnapshotCommand(portfolio), ct);
         return Ok();
     }
 }
 
-public record LogTradeCloseRequest(int TradeId, double ClosePrice, double PnlUsdt, double PnlPct, string Reason);
+public record LogTradeOpenRequest(int Id, string Symbol, string Side, double Entry, double Quantity, double Value, double? StopLoss, double? TakeProfit, int? AiScore, DateTime CreatedAt);
+public record LogTradeCloseRequest(int TradeId, double ClosePrice, double Pnl, double PnlPct, string Reason);
 public record UpdateTakeProfitRequest(int TradeId, double TakeProfit);
+public record OpenPositionResponse(int Id, string Symbol, string Side, double Entry, double Quantity, double Value, double? StopLoss, double? TakeProfit, int? AiScore, DateTime CreatedAt);
+
+public class PortfolioSnapshotRequest
+{
+    [JsonPropertyName("free")]
+    public double Free { get; set; }
+
+    [JsonPropertyName("total")]
+    public double Total { get; set; }
+
+    [JsonPropertyName("dailyPnl")]
+    public double DailyPnl { get; set; }
+
+    [JsonPropertyName("totalPnl")]
+    public double TotalPnl { get; set; }
+
+    [JsonPropertyName("openPositions")]
+    public List<PortfolioPositionRequest> OpenPositions { get; set; } = new();
+}
+
+public class PortfolioPositionRequest
+{
+    [JsonPropertyName("symbol")]
+    public string Symbol { get; set; } = string.Empty;
+
+    [JsonPropertyName("value")]
+    public double Value { get; set; }
+}
