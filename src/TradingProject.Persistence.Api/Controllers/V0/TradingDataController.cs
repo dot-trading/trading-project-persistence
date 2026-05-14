@@ -46,8 +46,8 @@ public class TradingDataController(IMediator mediator) : ControllerBase
     [HttpPost("trades/open")]
     public async Task<IActionResult> LogTradeOpen([FromBody] OpenPosition trade, CancellationToken ct)
     {
-        await mediator.SendCommandAsync(new LogTradeOpenCommand(trade), ct);
-        return Ok();
+        var id = await mediator.SendCommandAsync<LogTradeOpenCommand, int>(new LogTradeOpenCommand(trade), ct);
+        return Ok(id);
     }
 
     [HttpPost("trades/close")]

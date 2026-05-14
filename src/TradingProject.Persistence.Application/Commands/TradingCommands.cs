@@ -5,22 +5,22 @@ using TradingProject.Persistence.Domain.Entities;
 
 namespace TradingProject.Persistence.Application.Commands;
 
-public record LogTradeOpenCommand(OpenPosition Trade) : ICommand;
+public record LogTradeOpenCommand(OpenPosition Trade) : ICommand<int>;
 public record LogTradeCloseCommand(int TradeId, double ClosePrice, double Pnl, double PnlPct, string Reason) : ICommand;
 public record UpdateTakeProfitCommand(int TradeId, double TakeProfit) : ICommand;
 public record LogOpportunityCommand(OpportunityData Opportunity) : ICommand;
 public record LogPortfolioSnapshotCommand(PortfolioData Portfolio) : ICommand;
 
 public class CommandHandlers(IDatabaseService db, ITradingDbContext context) : 
-    ICommandHandler<LogTradeOpenCommand>,
+    ICommandHandler<LogTradeOpenCommand, int>,
     ICommandHandler<LogTradeCloseCommand>,
     ICommandHandler<UpdateTakeProfitCommand>,
     ICommandHandler<LogOpportunityCommand>,
     ICommandHandler<LogPortfolioSnapshotCommand>
 {
-    public async Task Handle(LogTradeOpenCommand command, CancellationToken ct)
+    public async Task<int> Handle(LogTradeOpenCommand command, CancellationToken ct)
     {
-        await db.LogTradeOpen(command.Trade, ct);
+        return await db.LogTradeOpen(command.Trade, ct);
     }
 
     public async Task Handle(LogTradeCloseCommand command, CancellationToken ct)

@@ -11,7 +11,7 @@ public interface IDatabaseService
     Task<double> GetTotalPnl(string? quoteAsset = null, CancellationToken ct = default);
     Task<Stats> GetStats(string? quoteAsset = null, CancellationToken ct = default);
     Task<List<ClosedTrade>> GetLastTrades(int limit = 5, CancellationToken ct = default);
-    Task LogTradeOpen(OpenPosition trade, CancellationToken ct = default);
+    Task<int> LogTradeOpen(OpenPosition trade, CancellationToken ct = default);
     Task LogTradeClose(int tradeId, double closePrice, double pnl, double pnlPct, string reason, CancellationToken ct = default);
     Task UpdateTakeProfit(int tradeId, double takeProfit, CancellationToken ct = default);
     Task LogOpportunity(OpportunityData opportunity, CancellationToken ct = default);

@@ -138,7 +138,7 @@ public class DatabaseService(IServiceScopeFactory scopeFactory) : IDatabaseServi
             .ToListAsync(ct);
     }
 
-    public async Task LogTradeOpen(OpenPosition trade, CancellationToken ct = default)
+    public async Task<int> LogTradeOpen(OpenPosition trade, CancellationToken ct = default)
     {
         using var scope = scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ITradingDbContext>();
@@ -159,6 +159,7 @@ public class DatabaseService(IServiceScopeFactory scopeFactory) : IDatabaseServi
 
         context.Trades.Add(entity);
         await context.SaveChangesAsync(ct);
+        return entity.Id;
     }
 
     public async Task LogTradeClose(int tradeId, double closePrice, double pnl, double pnlPct, string reason, CancellationToken ct = default)

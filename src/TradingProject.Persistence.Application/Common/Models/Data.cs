@@ -82,5 +82,5 @@ public record OpenPosition(
 public record ClosedTrade(
     string Symbol, string Side,
     double Entry, double ClosePrice,
-    double Pnl, double PnlPct,
+    [property: JsonPropertyName("pnlUsdt")] double Pnl, double PnlPct,
     int? AiScore, DateTime OpenedAt, DateTime ClosedAt);
