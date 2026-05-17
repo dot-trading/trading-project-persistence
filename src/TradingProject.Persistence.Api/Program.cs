@@ -6,8 +6,14 @@ using Microsoft.Extensions.Hosting;
 using TradingProject.Persistence.Application;
 using TradingProject.Persistence.Infrastructure;
 using TradingProject.Persistence.Infrastructure.Persistence;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext());
 
 // Add layers
 builder.Services.AddApplication();
