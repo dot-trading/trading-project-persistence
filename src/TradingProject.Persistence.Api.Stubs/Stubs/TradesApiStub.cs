@@ -42,7 +42,7 @@ public class TradesApiStub : ITradesApi
         var trade = new TradeResponse(
             Id: _nextId++,
             Symbol: request.Symbol,
-            QuoteAsset: "",
+            QuoteAsset: ExtractQuoteAsset(request.Symbol),
             Side: request.Side,
             Status: "open",
             Price: request.Price,
@@ -89,5 +89,14 @@ public class TradesApiStub : ITradesApi
 
         _trades[index] = updated;
         return Task.FromResult<TradeResponse?>(updated);
+    }
+
+    private static string ExtractQuoteAsset(string symbol)
+    {
+        var knownQuoteAssets = new[] { "USDC", "USDT", "BUSD", "BTC", "ETH", "BNB", "EUR", "USD" };
+        foreach (var asset in knownQuoteAssets)
+            if (symbol.EndsWith(asset, System.StringComparison.OrdinalIgnoreCase))
+                return asset.ToUpperInvariant();
+        return string.Empty;
     }
 }
