@@ -21,7 +21,7 @@ spec:
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
-            path: /api/TradingData/stats
+            path: /health
             port: 8080
           initialDelaySeconds: 15
           periodSeconds: 20
